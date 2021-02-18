@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace Bot600
@@ -30,7 +31,7 @@ namespace Bot600
                 hash = hash.Substring(hash.LastIndexOf('/') + 1);
             }
 
-            if (!System.Text.RegularExpressions.Regex.IsMatch(hash, @"^[a-zA-Z0-9]+$"))
+            if (!Regex.IsMatch(hash, @"^[a-zA-Z0-9]+$"))
             {
                 ReplyAsync($"Error executing !commitmsg: argument is invalid");
                 return;
