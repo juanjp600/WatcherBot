@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace Bot600
 {
@@ -19,6 +20,8 @@ namespace Bot600
         {
             kill = true;
         }
+
+        internal IConfigurationRoot Config;
 
         private ulong outputGuildId;
 
@@ -84,12 +87,9 @@ namespace Bot600
         private async Task OnReady()
         {
             outputGuild = await client.Rest.GetGuildAsync(outputGuildId);
-            moderatorRoles.Clear();
-            foreach (string idStr in File.ReadAllLines("config/moderatorroles.txt"))
-            {
-                ulong id = ulong.Parse(idStr);
-                moderatorRoles.Add(outputGuild.Roles.First(r => r.Id == id));
-            }
+            moderatorRoles = Config.GetSection("ModeratorRoles").Get<ulong[]>()
+                .Select(i => outputGuild.Roles.FirstOrDefault(r => r.Id == i))
+                .ToHashSet();
         }
 
         public async Task MainAsync()
@@ -98,6 +98,9 @@ namespace Bot600
             {
                 Directory.CreateDirectory("msgs");
             }
+
+            Config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", false, true).Build();
 
             DiscordSocketConfig discordSocketConfig = new DiscordSocketConfig {MessageCacheSize = 0};
             client = new DiscordSocketClient();
@@ -111,8 +114,8 @@ namespace Bot600
             await commandService.AddModulesAsync(assembly: Assembly.GetEntryAssembly(),
                                                  services: commandServiceProvider);
 
-            outputGuildId = ulong.Parse(File.ReadAllText("config/targets.txt"));
-            var token = File.ReadAllText("config/token.txt");
+            outputGuildId = Config.GetSection("Target").Get<ulong>();
+            var token = Config.GetSection("Token").Get<string>();
 
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
