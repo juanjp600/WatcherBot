@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Channels;
@@ -56,12 +57,13 @@ namespace Bot600
         [Command("commitmsg", RunMode = RunMode.Async)]
         [Summary("Gets a commit message.")]
         [Alias("c", "commit")]
-        public async Task CommitMsg([Remainder][Summary("The hash or GitHub URL to get the commit message for")] string hash = null)
+        public async Task CommitMsg([Summary("The hash or GitHub URL to get the commit message for")] params string[] hashes)
         {
             await Task.Yield();
             var result =
+                hashes.Select(hash =>
                 string.IsNullOrWhiteSpace(hash)
-                    ? Result<string>.Failure("Error executing !commitmsg: expected at least one argument")
+                    ? Result<string>.Failure("Error executing !commitmsg: empty parameter")
                     : Result<string>.Success(hash)
                         .Bind(h =>
                             Regex.IsMatch(h, @"^[0-9a-fA-F]{5,40}$")
@@ -83,9 +85,10 @@ namespace Bot600
                             Fetch();
                             return GetCommitMessage(hash);
                         })
-                        .Map(msg => $"`{hash.Substring(0, Math.Min(hash.Length, 10))}: {msg}`");
+                        .Map(msg => $"`{hash.Substring(0, Math.Min(hash.Length, 10))}: {msg}`"))
+                    .Select(r => r.ToString());
 
-            ReplyAsync(result.ToString());
+            ReplyAsync(string.Join("\n", result));
         }
     }
 }
