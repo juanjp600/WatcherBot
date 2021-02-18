@@ -38,13 +38,15 @@ namespace Bot600
 
             Process process = new Process();
 
-            ProcessStartInfo processStartInfo = new ProcessStartInfo();
-            processStartInfo.WindowStyle = ProcessWindowStyle.Normal;
-            processStartInfo.WorkingDirectory = "./Barotrauma-development/";
-            processStartInfo.FileName = "git";
-            processStartInfo.RedirectStandardOutput = true;
-            processStartInfo.RedirectStandardError = true;
-            processStartInfo.UseShellExecute = false;
+            ProcessStartInfo processStartInfo = new ProcessStartInfo
+            {
+                WindowStyle = ProcessWindowStyle.Normal,
+                WorkingDirectory = "./Barotrauma-development/",
+                FileName = "git",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
 
             for (int i = 0; i < 2; i++)
             {
