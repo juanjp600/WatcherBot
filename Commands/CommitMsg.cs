@@ -13,7 +13,7 @@ namespace Bot600
         private static ProcessStartInfo ProcessStartInfo => new ProcessStartInfo
         {
             WindowStyle = ProcessWindowStyle.Normal,
-            WorkingDirectory = "/home/jlb/Documents/C#/Bot600/",
+            WorkingDirectory = "./Barotrauma-development/",
             FileName = "git",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
