@@ -1,14 +1,10 @@
-﻿using Discord.Commands;
-using Discord.WebSocket;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Channels;
 using System.Threading.Tasks;
+using Discord.Commands;
 
 namespace Bot600
 {
@@ -26,29 +22,24 @@ namespace Bot600
 
         private static void Fetch()
         {
-            Process process = new Process {StartInfo = ProcessStartInfo};
+            var process = new Process {StartInfo = ProcessStartInfo};
             process.StartInfo.Arguments = "fetch";
             process.Start();
         }
-        
+
         private static Result<string> GetCommitMessage(string hash)
         {
             hash = Path.TrimEndingDirectorySeparator(hash);
-            if (hash.Contains('/'))
-            {
-                hash = hash.Substring(hash.LastIndexOf('/') + 1);
-            }
-            
-            if (!Regex.IsMatch(hash, @"^[0-9a-fA-F]{5,40}$"))
-            {
-                return Result<string>.Failure($"Error executing !commitmsg: argument is invalid");
-            }
+            if (hash.Contains('/')) hash = hash.Substring(hash.LastIndexOf('/') + 1);
 
-            Process process = new Process {StartInfo = ProcessStartInfo};
+            if (!Regex.IsMatch(hash, @"^[0-9a-fA-F]{5,40}$"))
+                return Result<string>.Failure("Error executing !commitmsg: argument is invalid");
+
+            var process = new Process {StartInfo = ProcessStartInfo};
             process.StartInfo.Arguments = $"show-branch --no-name {hash}";
             process.Start();
-            string output = process.StandardOutput.ReadToEnd();
-            
+            var output = process.StandardOutput.ReadToEnd();
+
             return string.IsNullOrWhiteSpace(output)
                 ? Result<string>.Failure($"Error executing !commitmsg: could not find commit {hash}")
                 : Result<string>.Success(output);
@@ -57,35 +48,37 @@ namespace Bot600
         [Command("commitmsg", RunMode = RunMode.Async)]
         [Summary("Gets a commit message.")]
         [Alias("c", "commit")]
-        public async Task CommitMsg([Summary("The hash or GitHub URL to get the commit message for")] params string[] hashes)
+        public async Task CommitMsg([Summary("The hash or GitHub URL to get the commit message for")]
+            params string[] hashes)
         {
             await Task.Yield();
             var result =
                 hashes.Select(hash =>
-                string.IsNullOrWhiteSpace(hash)
-                    ? Result<string>.Failure("Error executing !commitmsg: empty parameter")
-                    : Result<string>.Success(hash)
-                        .Bind(h =>
-                            Regex.IsMatch(h, @"^[0-9a-fA-F]{5,40}$")
-                            ? Result<string>.Success(h)
-                            : Result<string>.Failure(""))
-                        .Map(h =>
-                        {
-                            h = Path.TrimEndingDirectorySeparator(h);
-                            if (h.Contains('/'))
-                            {
-                                h = h.Substring(h.LastIndexOf('/'));
-                            }
+                        string.IsNullOrWhiteSpace(hash)
+                            ? Result<string>.Failure("Error executing !commitmsg: empty parameter")
+                            : Result<string>.Success(hash)
+                                .Bind(h =>
+                                    Regex.IsMatch(h, @"^[0-9a-fA-F]{5,40}$")
+                                        ? Result<string>.Success(h)
+                                        : Result<string>.Failure(""))
+                                
+                                .Map(h =>
+                                {
+                                    h = Path.TrimEndingDirectorySeparator(h);
+                                    if (h.Contains('/')) h = h.Substring(h.LastIndexOf('/'));
 
-                            return h;
-                        })
-                        .Bind(GetCommitMessage)
-                        .OrElseThunk(() =>
-                        {
-                            Fetch();
-                            return GetCommitMessage(hash);
-                        })
-                        .Map(msg => $"`{hash.Substring(0, Math.Min(hash.Length, 10))}: {msg}`"))
+                                    return h;
+                                })
+                                
+                                .Bind(GetCommitMessage)
+                                
+                                .OrElseThunk(() =>
+                                {
+                                    Fetch();
+                                    return GetCommitMessage(hash);
+                                })
+                                
+                                .Map(msg => $"`{hash.Substring(0, Math.Min(hash.Length, 10))}: {msg}`"))
                     .Select(r => r.ToString());
 
             ReplyAsync(string.Join("\n", result));
