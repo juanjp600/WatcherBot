@@ -56,7 +56,7 @@ namespace Bot600
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message + "\n" + e.StackTrace);
+                Console.WriteLine($"{e.Message}\n{e.StackTrace}");
                 throw;
             }
         }
