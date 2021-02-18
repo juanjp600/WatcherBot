@@ -50,14 +50,17 @@ namespace Bot600
             {
                 var result =
                     hashes.Select(hash =>
+                            // Construct initial Result.
                             string.IsNullOrWhiteSpace(hash)
                                 ? Result<string>.Failure("Error executing !commitmsg: empty parameter")
                                 : Result<string>.Success(hash)
+                                    // Bind whenever a new step could introduce an error (e.g. failing regex match).
                                     .Bind(h =>
                                         Regex.IsMatch(h, @"^[0-9a-fA-F]{5,40}$")
                                             ? Result<string>.Success(h)
                                             : Result<string>.Failure("Error executing !commitmsg: argument is invalid"))
 
+                                    // Map whenever output is guaranteed to work.
                                     .Map(h =>
                                     {
                                         h = Path.TrimEndingDirectorySeparator(h);
@@ -66,15 +69,19 @@ namespace Bot600
                                         return h;
                                     })
 
+                                    // Try to get the commit message.
                                     .Bind(GetCommitMessage)
 
+                                    // If can't find it, fetch and try again.
                                     .OrElseThunk(() =>
                                     {
                                         Fetch();
                                         return GetCommitMessage(hash);
                                     })
 
+                                    // Finally, format for Discord message.
                                     .Map(msg => $"`{hash.Substring(0, Math.Min(hash.Length, 10))}: {msg}`"))
+                        // Turn each Result into a string.
                         .Select(r => r.ToString());
 
                 ReplyAsync(string.Join("\n", result));
