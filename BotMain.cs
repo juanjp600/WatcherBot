@@ -24,7 +24,7 @@ namespace Bot600
 
         private RestGuild outputGuild;
 
-        List<RestRole> moderatorRoles = new List<RestRole>();
+        private HashSet<RestRole> moderatorRoles = new HashSet<RestRole>();
         public async Task<bool> IsModerator(IUser user)
         {
             var guild = await client.Rest.GetGuildAsync(outputGuildId);
