@@ -99,7 +99,7 @@ namespace Bot600
                 Directory.CreateDirectory("msgs");
             }
 
-            DiscordSocketConfig config = new DiscordSocketConfig {MessageCacheSize = 0};
+            DiscordSocketConfig discordSocketConfig = new DiscordSocketConfig {MessageCacheSize = 0};
             client = new DiscordSocketClient();
 
             client.Log += InternalLog;
