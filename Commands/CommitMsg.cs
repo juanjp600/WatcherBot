@@ -29,12 +29,6 @@ namespace Bot600
 
         private static Result<string> GetCommitMessage(string hash)
         {
-            hash = Path.TrimEndingDirectorySeparator(hash);
-            if (hash.Contains('/')) hash = hash.Substring(hash.LastIndexOf('/') + 1);
-
-            if (!Regex.IsMatch(hash, @"^[0-9a-fA-F]{5,40}$"))
-                return Result<string>.Failure("Error executing !commitmsg: argument is invalid");
-
             var process = new Process {StartInfo = ProcessStartInfo};
             process.StartInfo.Arguments = $"show-branch --no-name {hash}";
             process.Start();
@@ -62,7 +56,7 @@ namespace Bot600
                                     .Bind(h =>
                                         Regex.IsMatch(h, @"^[0-9a-fA-F]{5,40}$")
                                             ? Result<string>.Success(h)
-                                            : Result<string>.Failure(""))
+                                            : Result<string>.Failure("Error executing !commitmsg: argument is invalid"))
 
                                     .Map(h =>
                                     {
