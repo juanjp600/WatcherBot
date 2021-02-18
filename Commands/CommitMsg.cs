@@ -36,8 +36,6 @@ namespace Bot600
                 return;
             }
 
-            Process process = new Process();
-
             ProcessStartInfo processStartInfo = new ProcessStartInfo
             {
                 WindowStyle = ProcessWindowStyle.Normal,
@@ -52,7 +50,7 @@ namespace Bot600
             {
                 processStartInfo.Arguments = $"show-branch --no-name {hash}";
 
-                process = new Process {StartInfo = processStartInfo};
+                Process process = new Process {StartInfo = processStartInfo};
                 process.Start();
                 string output = process.StandardOutput.ReadToEnd();
                 if (string.IsNullOrWhiteSpace(output))
