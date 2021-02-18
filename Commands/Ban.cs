@@ -36,7 +36,7 @@ namespace Bot600.Commands
             var banner = Context.Message.Author;
             if (!await botMain.IsModerator(banner))
             {
-                ReplyAsync($"Error executing !ban: <@{banner.Id}> is not a moderator");
+                ReplyAsync($"Error executing !ban: {banner.Mention} is not a moderator");
                 return;
             }
             var baneeDM = await user.GetOrCreateDMChannelAsync();
@@ -56,13 +56,13 @@ namespace Bot600.Commands
                 .Replace("[banner]", bannerStr);
 
             IMessage directMsg = null;
-            string feedback = $"<@{user.Id}> has been banned. The appeal message could not be sent.\n";
+            string feedback = $"{user.Mention} has been banned. The appeal message could not be sent.\n";
             try
             {
                 directMsg = await baneeDM.SendMessageAsync(banMsg);
                 if (directMsg != null && directMsg.Id != 0)
                 {
-                    feedback = $"<@{user.Id}> has been banned. The message sent was the following:\n{banMsg}";
+                    feedback = $"{user.Mention} has been banned. The message sent was the following:\n{banMsg}";
                 }
             }
             catch
@@ -89,7 +89,7 @@ namespace Bot600.Commands
             var banner = Context.Message.Author;
             if (!await botMain.IsModerator(banner))
             {
-                ReplyAsync($"Error executing !ban_anon: <@{banner.Id}> is not a moderator");
+                ReplyAsync($"Error executing !ban_anon: {banner.Mention} is not a moderator");
                 return;
             }
             var baneeDM = await user.GetOrCreateDMChannelAsync();
@@ -97,13 +97,13 @@ namespace Bot600.Commands
                 .Replace("[reason]", reason ?? "No reason provided")
                 .Replace("[banner]", $"`{defaultAppeal}`");
             IMessage directMsg = null;
-            string feedback = $"<@{user.Id}> has been banned. The appeal message could not be sent.\n";
+            string feedback = $"{user.Mention} has been banned. The appeal message could not be sent.\n";
             try
             {
                 directMsg = await baneeDM.SendMessageAsync(banMsg);
                 if (directMsg != null && directMsg.Id != 0)
                 {
-                    feedback = $"<@{user.Id}> has been banned. The message sent was the following:\n{banMsg}";
+                    feedback = $"{user.Mention} has been banned. The message sent was the following:\n{banMsg}";
                 }
             }
             catch
