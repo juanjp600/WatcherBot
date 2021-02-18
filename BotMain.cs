@@ -24,7 +24,7 @@ namespace Bot600
 
         private RestGuild outputGuild;
 
-        List<RestRole> moderatorRoles = new List<RestRole>();
+        private HashSet<RestRole> moderatorRoles = new HashSet<RestRole>();
         public async Task<bool> IsModerator(IUser user)
         {
             var guild = await client.Rest.GetGuildAsync(outputGuildId);
@@ -56,7 +56,7 @@ namespace Bot600
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message + "\n" + e.StackTrace);
+                Console.WriteLine($"{e.Message}\n{e.StackTrace}");
                 throw;
             }
         }
@@ -99,8 +99,7 @@ namespace Bot600
                 Directory.CreateDirectory("msgs");
             }
 
-            DiscordSocketConfig config = new DiscordSocketConfig();
-            config.MessageCacheSize = 0;
+            DiscordSocketConfig config = new DiscordSocketConfig {MessageCacheSize = 0};
             client = new DiscordSocketClient();
 
             client.Log += InternalLog;
