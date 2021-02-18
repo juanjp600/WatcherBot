@@ -31,7 +31,7 @@ namespace Bot600
                 hash = hash.Substring(hash.LastIndexOf('/') + 1);
             }
 
-            if (!Regex.IsMatch(hash, @"^[0-9a-fA-F]{5,}$"))
+            if (!Regex.IsMatch(hash, @"^[0-9a-fA-F]{5,40}$"))
             {
                 ReplyAsync($"Error executing !commitmsg: argument is invalid");
                 return;
