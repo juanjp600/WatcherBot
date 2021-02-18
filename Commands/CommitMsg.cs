@@ -13,6 +13,46 @@ namespace Bot600
 {
     public class CommitCommandModule : ModuleBase<SocketCommandContext>
     {
+        private static ProcessStartInfo ProcessStartInfo => new ProcessStartInfo
+        {
+            WindowStyle = ProcessWindowStyle.Normal,
+            WorkingDirectory = "/home/jlb/Documents/C#/Bot600/",
+            FileName = "git",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+
+        private static void Fetch()
+        {
+            Process process = new Process {StartInfo = ProcessStartInfo};
+            process.StartInfo.Arguments = "fetch";
+            process.Start();
+        }
+        
+        private static Result<string> GetCommitMessage(string hash)
+        {
+            hash = Path.TrimEndingDirectorySeparator(hash);
+            if (hash.Contains('/'))
+            {
+                hash = hash.Substring(hash.LastIndexOf('/') + 1);
+            }
+            
+            if (!Regex.IsMatch(hash, @"^[0-9a-fA-F]{5,40}$"))
+            {
+                return Result<string>.Failure($"Error executing !commitmsg: argument is invalid");
+            }
+
+            Process process = new Process {StartInfo = ProcessStartInfo};
+            process.StartInfo.Arguments = $"show-branch --no-name {hash}";
+            process.Start();
+            string output = process.StandardOutput.ReadToEnd();
+            
+            return string.IsNullOrWhiteSpace(output)
+                ? Result<string>.Failure("Error executing !commitmsg: argument is invalid")
+                : Result<string>.Success(output);
+        }
+
         [Command("commitmsg", RunMode = RunMode.Async)]
         [Summary("Gets a commit message.")]
         [Alias("c", "commit")]
@@ -37,51 +77,17 @@ namespace Bot600
                 return;
             }
 
-            ProcessStartInfo processStartInfo = new ProcessStartInfo
-            {
-                WindowStyle = ProcessWindowStyle.Normal,
-                WorkingDirectory = "./Barotrauma-development/",
-                FileName = "git",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            };
-
-            for (int i = 0; i < 2; i++)
-            {
-                processStartInfo.Arguments = $"show-branch --no-name {hash}";
-
-                Process process = new Process {StartInfo = processStartInfo};
-                process.Start();
-                string output = process.StandardOutput.ReadToEnd();
-                if (string.IsNullOrWhiteSpace(output))
-                {
-                    if (i > 0)
+            var result =
+                GetCommitMessage(hash)
+                    .OrElseThunk(() =>
                     {
-                        ReplyAsync($"Error executing !commitmsg: argument is invalid");
-                        return;
-                    }
-                    else
-                    {
-                        processStartInfo.Arguments = "fetch";
+                        Fetch();
+                        return GetCommitMessage(hash);
+                    })
+                    .Map(msg => $"`{hash.Substring(0, Math.Min(hash.Length, 10))}: {msg}`")
+                    .ToString();
 
-                        Console.WriteLine($"Fetching for {hash}...");
-
-                        process = new Process {StartInfo = processStartInfo};
-                        process.Start();
-                        output = process.StandardOutput.ReadToEnd();
-
-                        Console.WriteLine($"Fetched! Outputting {hash} name...");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"{hash}: {output}");
-                    if (hash.Length > 10) { hash = hash.Substring(0, 10); }
-                    ReplyAsync($"`{hash} {output}`");
-                    return;
-                }
-            }
+            ReplyAsync(result);
         }
     }
 }
