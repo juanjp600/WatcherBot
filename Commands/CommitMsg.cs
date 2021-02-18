@@ -12,22 +12,9 @@ namespace Bot600
 {
     public class CommitCommandModule : ModuleBase<SocketCommandContext>
     {
-        [Command("c", RunMode = RunMode.Async)]
-        [Summary("Gets a commit message.")]
-        public async Task C([Remainder][Summary("The hash or GitHub URL to get the commit message for")] string hash = null)
-        {
-            await CommitMsg(hash);
-        }
-
-        [Command("commit", RunMode = RunMode.Async)]
-        [Summary("Gets a commit message.")]
-        public async Task Commit([Remainder][Summary("The hash or GitHub URL to get the commit message for")] string hash = null)
-        {
-            await CommitMsg(hash);
-        }
-
         [Command("commitmsg", RunMode = RunMode.Async)]
         [Summary("Gets a commit message.")]
+        [Alias("c", "commit")]
         public async Task CommitMsg([Remainder][Summary("The hash or GitHub URL to get the commit message for")] string hash = null)
         {
             if (string.IsNullOrWhiteSpace(hash))
