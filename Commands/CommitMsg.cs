@@ -49,7 +49,7 @@ namespace Bot600
             string output = process.StandardOutput.ReadToEnd();
             
             return string.IsNullOrWhiteSpace(output)
-                ? Result<string>.Failure("Error executing !commitmsg: argument is invalid")
+                ? Result<string>.Failure($"Error executing !commitmsg: could not find commit {hash}")
                 : Result<string>.Success(output);
         }
 
