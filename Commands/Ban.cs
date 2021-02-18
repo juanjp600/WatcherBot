@@ -41,7 +41,7 @@ namespace Bot600.Commands
             }
             var baneeDM = await user.GetOrCreateDMChannelAsync();
 
-            string bannerStr = $"{banner.Username}#{banner.Discriminator}";
+            string bannerStr = banner.ToString();
             if (bannerStr != defaultAppeal)
             {
                 bannerStr = $"`{bannerStr}` or `{defaultAppeal}`";
