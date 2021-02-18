@@ -52,36 +52,39 @@ namespace Bot600
             params string[] hashes)
         {
             await Task.Yield();
-            var result =
-                hashes.Select(hash =>
-                        string.IsNullOrWhiteSpace(hash)
-                            ? Result<string>.Failure("Error executing !commitmsg: empty parameter")
-                            : Result<string>.Success(hash)
-                                .Bind(h =>
-                                    Regex.IsMatch(h, @"^[0-9a-fA-F]{5,40}$")
-                                        ? Result<string>.Success(h)
-                                        : Result<string>.Failure(""))
-                                
-                                .Map(h =>
-                                {
-                                    h = Path.TrimEndingDirectorySeparator(h);
-                                    if (h.Contains('/')) h = h.Substring(h.LastIndexOf('/'));
+            using (Context.Channel.EnterTypingState())
+            {
+                var result =
+                    hashes.Select(hash =>
+                            string.IsNullOrWhiteSpace(hash)
+                                ? Result<string>.Failure("Error executing !commitmsg: empty parameter")
+                                : Result<string>.Success(hash)
+                                    .Bind(h =>
+                                        Regex.IsMatch(h, @"^[0-9a-fA-F]{5,40}$")
+                                            ? Result<string>.Success(h)
+                                            : Result<string>.Failure(""))
 
-                                    return h;
-                                })
-                                
-                                .Bind(GetCommitMessage)
-                                
-                                .OrElseThunk(() =>
-                                {
-                                    Fetch();
-                                    return GetCommitMessage(hash);
-                                })
-                                
-                                .Map(msg => $"`{hash.Substring(0, Math.Min(hash.Length, 10))}: {msg}`"))
-                    .Select(r => r.ToString());
+                                    .Map(h =>
+                                    {
+                                        h = Path.TrimEndingDirectorySeparator(h);
+                                        if (h.Contains('/')) h = h.Substring(h.LastIndexOf('/'));
 
-            ReplyAsync(string.Join("\n", result));
+                                        return h;
+                                    })
+
+                                    .Bind(GetCommitMessage)
+
+                                    .OrElseThunk(() =>
+                                    {
+                                        Fetch();
+                                        return GetCommitMessage(hash);
+                                    })
+
+                                    .Map(msg => $"`{hash.Substring(0, Math.Min(hash.Length, 10))}: {msg}`"))
+                        .Select(r => r.ToString());
+
+                ReplyAsync(string.Join("\n", result));
+            }
         }
     }
 }
