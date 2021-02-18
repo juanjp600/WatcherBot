@@ -52,8 +52,7 @@ namespace Bot600
             {
                 processStartInfo.Arguments = $"show-branch --no-name {hash}";
 
-                process = new Process();
-                process.StartInfo = processStartInfo;
+                process = new Process {StartInfo = processStartInfo};
                 process.Start();
                 string output = process.StandardOutput.ReadToEnd();
                 if (string.IsNullOrWhiteSpace(output))
@@ -69,8 +68,7 @@ namespace Bot600
 
                         Console.WriteLine($"Fetching for {hash}...");
 
-                        process = new Process();
-                        process.StartInfo = processStartInfo;
+                        process = new Process {StartInfo = processStartInfo};
                         process.Start();
                         output = process.StandardOutput.ReadToEnd();
 
