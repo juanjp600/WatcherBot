@@ -51,10 +51,26 @@ namespace Bot600.Commands
                 bannerStr = $"`{bannerStr}`";
             }
 
-            baneeDM.SendMessageAsync(banTemplate
+            string banMsg = banTemplate
                 .Replace("[reason]", reason ?? "No reason provided")
-                .Replace("[banner]", bannerStr));
+                .Replace("[banner]", bannerStr);
+
+            IMessage directMsg = null;
+            string feedback = $"<@{user.Id}> has been banned. The appeal message could not be sent.\n";
+            try
+            {
+                directMsg = await baneeDM.SendMessageAsync(banMsg);
+                if (directMsg != null && directMsg.Id != 0)
+                {
+                    feedback = $"<@{user.Id}> has been banned. The message sent was the following:\n{banMsg}";
+                }
+            }
+            catch
+            {
+                directMsg = null;
+            }
             Context.Guild.AddBanAsync(user, reason: reason);
+            Context.Message.Channel.SendMessageAsync(feedback);
         }
 
         [Command("ban_anon", RunMode = RunMode.Async)]
@@ -73,14 +89,29 @@ namespace Bot600.Commands
             var banner = Context.Message.Author;
             if (!await botMain.IsModerator(banner))
             {
-                ReplyAsync($"Error executing !ban: <@{banner.Id}> is not a moderator");
+                ReplyAsync($"Error executing !ban_anon: <@{banner.Id}> is not a moderator");
                 return;
             }
             var baneeDM = await user.GetOrCreateDMChannelAsync();
-            baneeDM.SendMessageAsync(banTemplate
+            string banMsg = banTemplate
                 .Replace("[reason]", reason ?? "No reason provided")
-                .Replace("[banner]", $"`{defaultAppeal}`"));
+                .Replace("[banner]", $"`{defaultAppeal}`");
+            IMessage directMsg = null;
+            string feedback = $"<@{user.Id}> has been banned. The appeal message could not be sent.\n";
+            try
+            {
+                directMsg = await baneeDM.SendMessageAsync(banMsg);
+                if (directMsg != null && directMsg.Id != 0)
+                {
+                    feedback = $"<@{user.Id}> has been banned. The message sent was the following:\n{banMsg}";
+                }
+            }
+            catch
+            {
+                directMsg = null;
+            }
             Context.Guild.AddBanAsync(user, reason: reason);
+            Context.Message.Channel.SendMessageAsync(feedback);
         }
     }
 }
