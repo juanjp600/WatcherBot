@@ -25,6 +25,7 @@ namespace Bot600
             var process = new Process {StartInfo = ProcessStartInfo};
             process.StartInfo.Arguments = "fetch";
             process.Start();
+            process.StandardOutput.ReadToEnd();
         }
 
         private static Result<string> GetCommitMessage(string hash)
