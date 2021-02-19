@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace Bot600.Commands
 {
@@ -16,8 +17,8 @@ namespace Bot600.Commands
         public BanCommandModule(BotMain bm)
         {
             botMain = bm;
-            banTemplate = File.ReadAllText("config/ban.txt");
-            defaultAppeal = File.ReadAllText("config/defaultAppeal.txt");
+            banTemplate = bm.Config.GetSection("Ban").GetSection("Template").Get<string>();
+            defaultAppeal = bm.Config.GetSection("Ban").GetSection("DefaultAppeal").Get<string>();
         }
 
         [Command("ban", RunMode = RunMode.Async)]
