@@ -61,6 +61,7 @@ namespace Bot600
                                     {
                                         h = Path.TrimEndingDirectorySeparator(h);
                                         if (h.Contains('/')) h = h.Substring(h.LastIndexOf('/') + 1);
+                                        hash = h;
 
                                         return h;
                                     })
