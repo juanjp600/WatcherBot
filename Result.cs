@@ -13,6 +13,36 @@ namespace Bot600
             return IsSuccess ? Value.ToString() : FailureMessage;
         }
 
+        public static bool operator ==(Result<T> a, Result<T> b)
+        {
+            if (a is null && b is null)
+                return true;
+            if (a is null || b is null)
+                return false;
+            if (a.IsSuccess != b.IsSuccess)
+                return false;
+            if (a.IsSuccess)
+                return a.Value.Equals(b.Value);
+            return a.FailureMessage == b.FailureMessage;
+        }
+        
+        public static bool operator !=(Result<T> a, Result<T> b)
+        {
+            return !(a == b);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return this == (Result<T>) obj;
+        }
+
+        public override int GetHashCode()
+        {
+            var baseHash = IsSuccess ? Value.GetHashCode() : FailureMessage.GetHashCode();
+            var lsb = IsSuccess ? 1 : 0;
+            return (baseHash << 1) | lsb;
+        }
+
         protected Result(string failureMessage)
         {
             IsSuccess = false;

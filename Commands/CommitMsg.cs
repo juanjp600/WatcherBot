@@ -50,7 +50,7 @@ namespace Bot600
             using (Context.Channel.EnterTypingState())
             {
                 var result =
-                    hashes.ToHashSet(new HashComparer())
+                    hashes
                         .Select(hash =>
                             // Construct initial Result.
                             string.IsNullOrWhiteSpace(hash)
@@ -86,6 +86,7 @@ namespace Bot600
 
                                     // Finally, format for Discord message.
                                     .Map(msg => $"`{hash.Substring(0, Math.Min(hash.Length, 10))}: {msg}`"))
+                        .ToHashSet(new ResultComparer<string>())
                         // Turn each Result into a string.
                         .Select(r => r.ToString());
 
