@@ -55,30 +55,32 @@ namespace Bot600
                             string.IsNullOrWhiteSpace(hash)
                                 ? Result<string>.Failure("Error executing !commitmsg: empty parameter")
                                 : Result<string>.Success(hash)
-                                    // Bind whenever a new step could introduce an error (e.g. failing regex match).
+
+                                    // Extract hashes from GitHub URLs
+                                    .Map(h =>
+                                    {
+                                        h = Path.TrimEndingDirectorySeparator(h);
+                                        if (h.Contains('/')) h = h.Substring(h.LastIndexOf('/') + 1);
+
+                                        return h;
+                                    })
+
+                                    // Regex to only match hexadecimal input
                                     .Bind(h =>
                                         Regex.IsMatch(h, @"^[0-9a-fA-F]{5,40}$")
                                             ? Result<string>.Success(h)
                                             : Result<string>.Failure("Error executing !commitmsg: argument is invalid"))
 
-                                    // Map whenever output is guaranteed to work.
-                                    .Map(h =>
-                                    {
-                                        h = Path.TrimEndingDirectorySeparator(h);
-                                        if (h.Contains('/')) h = h.Substring(h.LastIndexOf('/'));
-
-                                        return h;
-                                    })
-
                                     // Try to get the commit message.
-                                    .Bind(GetCommitMessage)
+                                    .Bind(h =>
+                                        GetCommitMessage(h)
+                                        // If can't find it, fetch and try again.
+                                        .OrElseThunk(() =>
+                                        {
+                                            Fetch();
+                                            return GetCommitMessage(h);
+                                        }))
 
-                                    // If can't find it, fetch and try again.
-                                    .OrElseThunk(() =>
-                                    {
-                                        Fetch();
-                                        return GetCommitMessage(hash);
-                                    })
 
                                     // Finally, format for Discord message.
                                     .Map(msg => $"`{hash.Substring(0, Math.Min(hash.Length, 10))}: {msg}`"))
