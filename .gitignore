@@ -2,3 +2,4 @@ config/
 obj/
 bin/
 .vs/
+appsettings.json
