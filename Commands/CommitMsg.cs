@@ -77,7 +77,7 @@ namespace Bot600
                                     .Bind(h =>
                                         GetCommitMessage(h)
                                         // If can't find it, fetch and try again.
-                                        .OrElseThunk(() =>
+                                        .BindError(_ =>
                                         {
                                             Fetch();
                                             return GetCommitMessage(h);

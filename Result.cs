@@ -45,9 +45,9 @@ namespace Bot600
             return IsSuccess ? func(Value) : Result<TOut>.Failure(FailureMessage);
         }
 
-        public Result<T> OrElseThunk(Func<Result<T>> other)
+        public Result<T> BindError(Func<string, Result<T>> other)
         {
-            return IsSuccess ? this : other();
+            return IsSuccess ? this : other(FailureMessage);
         }
     }
 }
