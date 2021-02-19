@@ -17,7 +17,7 @@ namespace Bot600.Commands
         public BanCommandModule(BotMain bm)
         {
             botMain = bm;
-            banTemplate = bm.Config.GetSection("Ban").GetSection("Template").Get<string>();
+            banTemplate = string.Join('\n', bm.Config.GetSection("Ban").GetSection("Template").Get<string[]>());
             defaultAppeal = bm.Config.GetSection("Ban").GetSection("DefaultAppeal").Get<string>();
         }
 
