@@ -50,7 +50,8 @@ namespace Bot600
             using (Context.Channel.EnterTypingState())
             {
                 var result =
-                    hashes.Select(hash =>
+                    hashes.ToHashSet(new HashComparer())
+                        .Select(hash =>
                             // Construct initial Result.
                             string.IsNullOrWhiteSpace(hash)
                                 ? Result<string>.Failure("Error executing !commitmsg: empty parameter")
