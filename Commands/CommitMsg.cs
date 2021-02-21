@@ -50,7 +50,8 @@ namespace Bot600
             using (Context.Channel.EnterTypingState())
             {
                 var result =
-                    hashes.Select(hash =>
+                    hashes
+                        .Select(hash =>
                             // Construct initial Result.
                             string.IsNullOrWhiteSpace(hash)
                                 ? Result<string>.Failure("Error executing !commitmsg: empty parameter")
@@ -76,7 +77,7 @@ namespace Bot600
                                     .Bind(h =>
                                         GetCommitMessage(h)
                                         // If can't find it, fetch and try again.
-                                        .OrElseThunk(() =>
+                                        .BindError(_ =>
                                         {
                                             Fetch();
                                             return GetCommitMessage(h);
@@ -85,6 +86,7 @@ namespace Bot600
 
                                     // Finally, format for Discord message.
                                     .Map(msg => $"`{hash.Substring(0, Math.Min(hash.Length, 10))}: {msg}`"))
+                        .ToHashSet(new ResultComparer<string>())
                         // Turn each Result into a string.
                         .Select(r => r.ToString());
 
