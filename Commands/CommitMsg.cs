@@ -71,22 +71,22 @@ namespace Bot600
                                     .Bind(h =>
                                         Regex.IsMatch(h, @"^[0-9a-fA-F]{5,40}$")
                                             ? Result<string>.Success(h)
-                                            : Result<string>.Failure("Error executing !commitmsg: argument is invalid"))
-
-                                    // Try to get the commit message.
-                                    .Bind(h =>
-                                        GetCommitMessage(h)
-                                        // If can't find it, fetch and try again.
-                                        .BindError(_ =>
-                                        {
-                                            Fetch();
-                                            return GetCommitMessage(h);
-                                        }))
-
+                                            : Result<string>.Failure(
+                                                "Error executing !commitmsg: argument is invalid")))
+                        .ToHashSet(new HashComparer())
+                        .Select(hash => hash
+                            // Try to get the commit message.
+                            .Bind(h =>
+                                GetCommitMessage(h)
+                                    // If can't find it, fetch and try again.
+                                    .BindError(_ =>
+                                    {
+                                        Fetch();
+                                        return GetCommitMessage(h);
+                                    })
 
                                     // Finally, format for Discord message.
-                                    .Map(msg => $"`{hash.Substring(0, Math.Min(hash.Length, 10))}: {msg}`"))
-                        .ToHashSet(new ResultComparer<string>())
+                                    .Map(msg => $"`{h.Substring(0, Math.Min(h.Length, 10))}: {msg}`")))
                         // Turn each Result into a string.
                         .Select(r => r.ToString());
 
