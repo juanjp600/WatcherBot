@@ -31,9 +31,9 @@ namespace Bot600
         private static Result<string> GetCommitMessage(string hash)
         {
             var process = new Process {StartInfo = ProcessStartInfo};
-            process.StartInfo.Arguments = $"show-branch --no-name {hash}";
+            process.StartInfo.Arguments = $"log --format=%B -n 1 {hash}";
             process.Start();
-            var output = process.StandardOutput.ReadToEnd();
+            var output = process.StandardOutput.ReadToEnd()?.TrimEnd(' ', '\n', '\r');
 
             return string.IsNullOrWhiteSpace(output)
                 ? Result<string>.Failure($"Error executing !commitmsg: could not find commit {hash}")
