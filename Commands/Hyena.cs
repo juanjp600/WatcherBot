@@ -10,10 +10,9 @@ namespace Bot600.Commands
     {
         [Command("hyena", RunMode = RunMode.Async)]
         [Summary("smh my head")]
-        [Alias("yeen")]
+        [Alias("yeen", "sus", "help")]
         public async Task Hyena()
         {
-            Console.WriteLine("yeen command");
             var author = Context.Message.Author;
             var dm = await author.GetOrCreateDMChannelAsync();
             await dm.SendMessageAsync("https://tenor.com/view/keanu-reeves-knife-gif-19576998");
