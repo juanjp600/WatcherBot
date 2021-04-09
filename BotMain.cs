@@ -94,11 +94,6 @@ namespace Bot600
 
         public async Task MainAsync()
         {
-            if (!Directory.Exists("msgs"))
-            {
-                Directory.CreateDirectory("msgs");
-            }
-
             Config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", false, true).Build();
 
