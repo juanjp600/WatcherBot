@@ -1,13 +1,16 @@
-﻿using Discord.Commands;
-using System.IO;
-using System.Net;
+﻿#nullable enable
+using System.Net.Http;
 using System.Threading.Tasks;
+using Discord.Commands;
 using Newtonsoft.Json;
 
 namespace Bot600.Commands
 {
     public class HyenaCommandModule : ModuleBase<SocketCommandContext>
     {
+        private const string Endpoint = "https://api.yeen.land";
+        private static readonly HttpClient HttpClient = new HttpClient();
+
         [Command("sus", RunMode = RunMode.Async)]
         [Summary("smh my head")]
         public async Task Sus()
@@ -35,14 +38,39 @@ namespace Bot600.Commands
         [Alias("yeen")]
         public async Task Hyena()
         {
-            var response = await WebRequest.Create("https://api.yeen.land").GetResponseAsync();
-            await using var stream = response.GetResponseStream();
-            if (stream is null) { return; }
-            var reader = new StreamReader(stream);
-            var r = await reader.ReadToEndAsync();
-            var url = JsonConvert.DeserializeObject<HyenaUrl>(r);
-            if (url is null) { return; }
-            ReplyAsync(url.Url);
+            var reply = await GetReply(Endpoint);
+
+            ReplyAsync(reply);
+        }
+
+        [Command("hyena", RunMode = RunMode.Async)]
+        [Summary("hyena images")]
+        [Alias("yeen")]
+        public async Task Hyena(ulong id)
+        {
+            var requestUriString = $"{Endpoint}/id/{id}";
+            var reply = await GetReply(requestUriString);
+
+            ReplyAsync(reply);
+        }
+
+        private static async Task<HyenaUrl?> QueryApi(string requestUriString)
+        {
+            var response = await HttpClient.GetStringAsync(requestUriString);
+            var url = JsonConvert.DeserializeObject<HyenaUrl>(response);
+
+            return url;
+        }
+
+        private static async Task<string> GetReply(string requestUriString)
+        {
+            string reply;
+            if (await QueryApi(requestUriString) is { } url)
+                reply = url.Url;
+            else
+                reply = ":question:";
+
+            return reply;
         }
 
         private class HyenaUrl
