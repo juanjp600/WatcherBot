@@ -66,9 +66,13 @@ namespace Bot600.Commands
         {
             string reply;
             if (await QueryApi(requestUriString) is { } url)
+            {
                 reply = url.Url;
+            }
             else
+            {
                 reply = ":question:";
+            }
 
             return reply;
         }
