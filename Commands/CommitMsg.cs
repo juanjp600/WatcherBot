@@ -10,41 +10,35 @@ namespace Bot600
 {
     public class CommitCommandModule : ModuleBase<SocketCommandContext>
     {
-        private static ProcessStartInfo ProcessStartInfo => new ProcessStartInfo
+        private readonly BotMain botMain;
+        public CommitCommandModule(BotMain bm)
         {
-            WindowStyle = ProcessWindowStyle.Normal,
-            WorkingDirectory = "./Barotrauma-development/",
-            FileName = "git",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-
-        private static void Fetch()
-        {
-            var process = new Process {StartInfo = ProcessStartInfo};
-            process.StartInfo.Arguments = "fetch";
-            process.Start();
-            process.StandardOutput.ReadToEnd();
+            botMain = bm;
         }
 
-        private static Result<string> GetCommitMessage(string hash)
+        private Result<Octokit.GitHubCommit> GetCommitMessage(string hash)
         {
-            var process = new Process {StartInfo = ProcessStartInfo};
-            process.StartInfo.Arguments = $"log --format=%B -n 1 {hash}";
-            process.Start();
-            var output = process.StandardOutput.ReadToEnd()?.TrimEnd(' ', '\n', '\r');
-
-            return string.IsNullOrWhiteSpace(output)
-                ? Result<string>.Failure($"Error executing !commitmsg: could not find commit {hash}")
-                : Result<string>.Success(output);
+            //TODO: make this method async so we can use await instead of Result
+            try
+            {
+                var ghClient = botMain.GitHubClient;
+                var commit = ghClient.Repository.Commit.Get("Regalis11", "Barotrauma-development", hash).Result;
+                return Result<Octokit.GitHubCommit>.Success(commit);
+            }
+            catch (AggregateException e)
+            {
+                return Result<Octokit.GitHubCommit>.Failure($"Error executing !commitmsg: {string.Join(", ", e.InnerExceptions.Select(inner => inner.Message))}");
+            }
+            catch (Exception e)
+            {
+                return Result<Octokit.GitHubCommit>.Failure($"Error executing !commitmsg: {e.Message}");
+            }
         }
 
         [Command("commitmsg", RunMode = RunMode.Async)]
         [Summary("Gets a commit message.")]
         [Alias("c", "commit")]
-        public async Task CommitMsg([Summary("The hash or GitHub URL to get the commit message for")]
-            params string[] hashes)
+        public async Task CommitMsg2([Summary("The hash or GitHub URL to get the commit message for")] params string[] hashes)
         {
             await Task.Yield();
             using (Context.Channel.EnterTypingState())
@@ -76,21 +70,13 @@ namespace Bot600
                         .ToHashSet(new HashComparer())
                         .Select(hash => hash
                             // Try to get the commit message.
-                            .Bind(h =>
-                                GetCommitMessage(h)
-                                    // If can't find it, fetch and try again.
-                                    .BindError(_ =>
-                                    {
-                                        Fetch();
-                                        return GetCommitMessage(h);
-                                    })
-
-                                    // Finally, format for Discord message.
-                                    .Map(msg => $"`{h.Substring(0, Math.Min(h.Length, 10))}: {msg}`")))
+                            .Bind(h => GetCommitMessage(h)
+                                    // Format for Discord message.
+                                    .Map(commit => $"`{commit.Sha.Substring(0, Math.Min(commit.Sha.Length, 10))}: {commit.Commit.Message}`")))
                         // Turn each Result into a string.
                         .Select(r => r.ToString());
 
-                ReplyAsync(string.Join("\n", result));
+                await ReplyAsync(string.Join("\n", result));
             }
         }
     }

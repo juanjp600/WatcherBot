@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Bot600
@@ -6,15 +7,12 @@ namespace Bot600
     {
         public bool Equals(Result<string> x, Result<string> y)
         {
-            if (x is null && y is null)
-                return true;
-            if (x is null || y is null)
-                return false;
-            if (x.IsSuccess != y.IsSuccess)
-                return false;
-            if (!x.IsSuccess)
-                return x.FailureMessage == y.FailureMessage;
-            return x.Value.StartsWith(y.Value) || y.Value.StartsWith(x.Value);
+            if (x is null && y is null) { return true; }
+            if (x is null || y is null) { return false; }
+            if (x.IsSuccess != y.IsSuccess) { return false; }
+            if (!x.IsSuccess) { return x.FailureMessage == y.FailureMessage; }
+            return x.Value.StartsWith(y.Value, StringComparison.OrdinalIgnoreCase)
+                || y.Value.StartsWith(x.Value, StringComparison.OrdinalIgnoreCase);
         }
 
         public int GetHashCode(Result<string> obj)

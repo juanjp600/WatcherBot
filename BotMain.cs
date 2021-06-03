@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Octokit;
 
 namespace Bot600
 {
@@ -26,6 +27,8 @@ namespace Bot600
         private ulong outputGuildId;
 
         private RestGuild outputGuild;
+
+        public GitHubClient GitHubClient { get; private set; }
 
         private HashSet<RestRole> moderatorRoles = new HashSet<RestRole>();
         public async Task<bool> IsModerator(IUser user)
@@ -97,6 +100,13 @@ namespace Bot600
             Config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", false, true).Build();
 
+            //GitHub API
+            GitHubClient = new GitHubClient(new ProductHeaderValue("Bot600"));
+            var gitHubCredentials = new Credentials(Config.GetSection("GitHubToken").Get<string>());
+            GitHubClient.Credentials = gitHubCredentials;
+            GitHubClient.SetRequestTimeout(TimeSpan.FromSeconds(5));
+
+            //Discord API
             DiscordSocketConfig discordSocketConfig = new DiscordSocketConfig {MessageCacheSize = 0};
             client = new DiscordSocketClient();
 

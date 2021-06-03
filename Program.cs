@@ -6,7 +6,7 @@ namespace Bot600
 {
     class Program
     {
-        public static void Main(string[] args)
-        => new BotMain().MainAsync().GetAwaiter().GetResult();
+        public static async Task Main(string[] args)
+        => await new BotMain().MainAsync();
     }
 }
