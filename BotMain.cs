@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Octokit;
+using System.Collections.Immutable;
 
 namespace Bot600
 {
@@ -67,10 +68,70 @@ namespace Bot600
             }
         }
 
+        private ImmutableHashSet<char> formattingCharacters;
+        private ImmutableHashSet<ulong> prohibitFormattingFromUsers;
+
+        private ImmutableHashSet<ulong> noConversationsAllowedOnChannels;
+        private ImmutableHashSet<ulong> prohibitCommandsFromUsers;
+        private ImmutableHashSet<ulong> invitesAllowedOnChannels;
+        private ImmutableHashSet<ulong> invitesAllowedOnServers;
+
+        private static int CountSubstrs(string str, string substr)
+        {
+            int count = 0;
+            int index = 0;
+            while (true)
+            {
+                index = str.IndexOf(substr, index, StringComparison.OrdinalIgnoreCase);
+                if (index < 0) { break; }
+                index++;
+                count++;
+            }
+            return count;
+        }
+
         private async Task ParseCommand(SocketUserMessage msg)
         {
+            if (!invitesAllowedOnChannels.Contains(msg.Channel.Id)
+                && (msg.Channel is SocketGuildChannel sgc)
+                && !invitesAllowedOnServers.Contains(sgc.Guild.Id)
+                && (msg.Content.Contains("discord.gg/", StringComparison.OrdinalIgnoreCase) ||
+                    msg.Content.Contains("discord.com/invite", StringComparison.OrdinalIgnoreCase) ||
+                    msg.Content.Contains("discordapp.com/invite", StringComparison.OrdinalIgnoreCase)))
+            {
+                IsModerator(msg.Author).ContinueWith(async (t) =>
+                {
+                    if (!t.Result) { msg.DeleteAsync(); }
+                });
+                return;
+            }
+
+            if (noConversationsAllowedOnChannels.Contains(msg.Channel.Id))
+            {
+                if ((((msg.Attachments.Count(a => a.Width == null || a.Height == null || (a.Width >= 16 && a.Height >= 16)) + CountSubstrs(msg.Content, "https://")) != 1)
+                    || msg.Attachments.Count(a => a.Width != null && a.Height != null && (a.Width < 16 || a.Height < 16)) > 0
+                    || msg.Content.Contains("http://", StringComparison.OrdinalIgnoreCase))
+                    && !msg.Author.IsBot)
+                {
+                    IsModerator(msg.Author).ContinueWith(async (t) =>
+                    {
+                        if (!t.Result) { msg.DeleteAsync(); }
+                    });
+                    return;
+                }
+            }
+
+            if (prohibitFormattingFromUsers.Contains(msg.Author.Id) &&
+                msg.Content.Any(c => formattingCharacters.Contains(c)))
+            {
+                msg.DeleteAsync();
+                return;
+            }
+
             int argPos = 0;
-            if (!(msg.HasCharPrefix('!', ref argPos) ||
+
+            if (prohibitCommandsFromUsers.Contains(msg.Author.Id) ||
+                !(msg.HasCharPrefix('!', ref argPos) ||
                 msg.HasMentionPrefix(client.CurrentUser, ref argPos)) ||
                 msg.Author.IsBot)
             {
@@ -121,6 +182,14 @@ namespace Bot600
 
             outputGuildId = Config.GetSection("Target").Get<ulong>();
             var token = Config.GetSection("Token").Get<string>();
+
+            //Cruelty :)
+            formattingCharacters = Config.GetSection("FormattingCharacters").Get<string>().ToImmutableHashSet();
+            prohibitFormattingFromUsers = Config.GetSection("ProhibitFormattingFromUsers").Get<ulong[]>().ToImmutableHashSet();
+            noConversationsAllowedOnChannels = Config.GetSection("NoConversationsAllowedOnChannels").Get<ulong[]>().ToImmutableHashSet();
+            prohibitCommandsFromUsers = Config.GetSection("ProhibitCommandsFromUsers").Get<ulong[]>().ToImmutableHashSet();
+            invitesAllowedOnChannels = Config.GetSection("InvitesAllowedOnChannels").Get<ulong[]>().ToImmutableHashSet();
+            invitesAllowedOnServers = Config.GetSection("InvitesAllowedOnServers").Get<ulong[]>().ToImmutableHashSet();
 
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
