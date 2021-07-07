@@ -1,15 +1,15 @@
-﻿using Discord;
+﻿using System.Threading.Tasks;
+using Bot600.Utils;
+using Discord;
 using Discord.Commands;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+using Discord.WebSocket;
 
 namespace Bot600.Commands
 {
     public class KillSwitchModule : ModuleBase<SocketCommandContext>
     {
-        private BotMain botMain;
+        private readonly BotMain botMain;
+
         public KillSwitchModule(BotMain bm)
         {
             botMain = bm;
@@ -20,8 +20,8 @@ namespace Bot600.Commands
         [RequireUserPermission(GuildPermission.ManageGuild, ErrorMessage = "Only moderators can issue this command")]
         public async Task KillSwitch()
         {
-            var user = Context.Message.Author;
-            if (!await botMain.IsModerator(user))
+            SocketUser? user = Context.Message.Author;
+            if (await botMain.IsUserModerator(user) == IsModerator.No)
             {
                 ReplyAsync($"Error executing !killswitch: {user.Mention} is not a moderator");
                 return;

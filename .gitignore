@@ -3,3 +3,6 @@ obj/
 bin/
 .vs/
 appsettings.json
+.idea/
+*.sqlite3
+*.db
