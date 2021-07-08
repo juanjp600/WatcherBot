@@ -53,41 +53,20 @@ namespace Bot600
             {
                 IEnumerable<string> result =
                     hashes
-                        .Select(hash =>
-                                    // Construct initial Result.
-                                    string.IsNullOrWhiteSpace(hash)
-                                        ? Result<string, string>.Error("Error executing !commitmsg: empty parameter")
-                                        : Result<string, string>.Ok(hash)
-
-                                                                // Extract hashes from GitHub URLs
-                                                                .Map(h =>
-                                                                     {
-                                                                         h = Path.TrimEndingDirectorySeparator(h);
-                                                                         if (h.Contains('/'))
-                                                                         {
-                                                                             h = h[(h.LastIndexOf('/') + 1)..];
-                                                                         }
-
-                                                                         hash = h;
-
-                                                                         return h;
-                                                                     })
-
-                                                                // Regex to only match hexadecimal input
-                                                                .Bind(h =>
-                                                                          Regex.IsMatch(h, @"^[0-9a-fA-F]{5,40}$")
-                                                                              ? Result<string, string>.Ok(h)
-                                                                              : Result<string, string>.Error(
-                                                                               "Error executing !commitmsg: argument is invalid")))
+                        .Select(ParseHash)
                         .ToHashSet(new HashComparer())
                         .Select(hash => hash
                                     // Try to get the commit message.
-                                    .Bind(h => GetCommitMessage(h)
-                                              // Format for Discord message.
-                                              .Map(commit =>
-                                                       $"`{commit.Sha[..Min(commit.Sha.Length, 10)]}: {commit.Commit.Message}`")))
+                                    .Bind(GetCommitMessage))
                         // Turn each Result into a string.
-                        .Select(r => r.ToString());
+                        .Select(r => r switch
+                                     {
+                                         // Format for Discord message.
+                                         Ok<GitHubCommit, string> o =>
+                                             $"`{o.Value.Commit.Sha[..Min(o.Value.Commit.Sha.Length, 10)]}: {o.Value.Commit.Message}`",
+                                         Error<GitHubCommit, string> e => e.Value,
+                                         _ => throw new ArgumentOutOfRangeException(nameof(r))
+                                     });
 
                 string content = string.Join("\n", result);
                 if (content.Length <= 2000)
@@ -108,6 +87,33 @@ namespace Bot600
                     Directory.Delete(directory, true);
                 }
             }
+        }
+
+        private static Result<string, string> ParseHash(string hash)
+        {
+            return string.IsNullOrWhiteSpace(hash)
+                       ? Result<string, string>.Error("Error executing !commitmsg: empty parameter")
+                       : Result<string, string>.Ok(hash)
+
+                                               // Extract hashes from GitHub URLs
+                                               .Map(h =>
+                                                    {
+                                                        h = Path.TrimEndingDirectorySeparator(h);
+                                                        if (h.Contains('/'))
+                                                        {
+                                                            h = h[(h.LastIndexOf('/') + 1)..];
+                                                        }
+
+                                                        hash = h;
+
+                                                        return h;
+                                                    })
+
+                                               // Regex to only match hexadecimal input
+                                               .Bind(h => Regex.IsMatch(h, @"^[0-9a-fA-F]{5,40}$")
+                                                              ? Result<string, string>.Ok(h)
+                                                              : Result<string, string>
+                                                                  .Error("Error executing !commitmsg: argument is invalid"));
         }
     }
 }
