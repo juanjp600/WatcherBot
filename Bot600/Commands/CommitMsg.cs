@@ -89,7 +89,24 @@ namespace Bot600
                         // Turn each Result into a string.
                         .Select(r => r.ToString());
 
-                await ReplyAsync(string.Join("\n", result));
+                string content = string.Join("\n", result);
+                if (content.Length <= 2000)
+                {
+                    await ReplyAsync(content);
+                }
+                else
+                {
+                    // Create a temporary directory
+                    string directory = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+                    Directory.CreateDirectory(directory);
+                    // Save the string to a file there
+                    string filepath = Path.Combine(directory, "commits.txt");
+                    await File.WriteAllTextAsync(filepath, content);
+                    // Send the file to Discord
+                    await Context.Channel.SendFileAsync(filepath);
+                    // Delete the temporary directory
+                    Directory.Delete(directory, true);
+                }
             }
         }
     }
