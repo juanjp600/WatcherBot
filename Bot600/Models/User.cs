@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using Bot600.Utils;
 
@@ -6,12 +7,11 @@ namespace Bot600.Models
 {
     public class User
     {
-        public User(ulong userId, uint totalMessages = 0, uint cringeMessages = 0, bool isCringeBool = false)
+        public User(ulong userId, uint totalMessages = 0, uint cringeMessages = 0)
         {
             UserId = userId;
             TotalMessages = totalMessages;
             CringeMessages = cringeMessages;
-            IsCringeBool = isCringeBool;
         }
 
         /// <summary>
@@ -24,7 +24,8 @@ namespace Bot600.Models
         /// <summary>
         ///     The Discord user ID of this user.
         /// </summary>
-        public ulong UserId { get; }
+        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local
+        public ulong UserId { get; private set; }
 
         /// <summary>
         ///     The total number of messages this user has sent while the bot is running.
@@ -39,7 +40,17 @@ namespace Bot600.Models
         /// <summary>
         ///     Whether the user is currently classified as cringe or not.
         /// </summary>
-        public bool IsCringeBool { get; private set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)] 
+        public bool IsCringeBool
+        {
+            get => TotalMessages > 3 && (double) CringeMessages / TotalMessages > 0.5;
+            // ReSharper disable once UnusedMember.Local
+            // ReSharper disable once ValueParameterNotUsed
+            // This is needed for EF core
+            private set { }
+        }
+        
+        public IsCringe IsCringe => IsCringeBool ? IsCringe.Yes : IsCringe.No;
 
         public static User GetOrCreateUser(WatcherDatabaseContext db, ulong userId)
         {
@@ -58,19 +69,10 @@ namespace Bot600.Models
         public void NewMessage(IsCringe isCringe)
         {
             TotalMessages++;
-            if (isCringe == Utils.IsCringe.Yes)
+            if (isCringe == IsCringe.Yes)
             {
                 CringeMessages++;
             }
-
-            IsCringeBool = TotalMessages > 3 && (double) CringeMessages / TotalMessages > 0.5;
-        }
-
-        public IsCringe IsCringe()
-        {
-            // Recalculate just in case
-            IsCringeBool = TotalMessages > 3 && (double) CringeMessages / TotalMessages > 0.5;
-            return IsCringeBool ? Utils.IsCringe.Yes : Utils.IsCringe.No;
         }
     }
 }

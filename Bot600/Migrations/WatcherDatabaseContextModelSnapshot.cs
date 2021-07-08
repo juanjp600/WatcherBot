@@ -25,6 +25,7 @@ namespace Bot600.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsCringeBool")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("INTEGER");
 
                     b.Property<uint>("TotalMessages")

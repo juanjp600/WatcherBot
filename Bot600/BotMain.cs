@@ -167,7 +167,7 @@ namespace Bot600
                     user.NewMessage(channelIsCringe);
                     db.SaveChanges();
                     // it's cringe to bool to cringe
-                    return (channelIsCringe.ToBool() && user.IsCringe().ToBool()).ToCringe();
+                    return (channelIsCringe.ToBool() && user.IsCringe.ToBool()).ToCringe();
                 }
 
                 if (UserIsCringe() == IsCringe.Yes)
