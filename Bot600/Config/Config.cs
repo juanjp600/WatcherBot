@@ -8,16 +8,16 @@ namespace Bot600
         public readonly BanTemplate BanTemplate;
         public readonly IConfigurationRoot Configuration;
 
-        public readonly ImmutableHashSet<ulong> CringeChannels;
-        public readonly string DiscordApiToken;
-        public readonly ImmutableHashSet<char> FormattingCharacters;
-
         public readonly string GitHubToken;
+        public readonly ulong OutputGuildId;
+        public readonly string DiscordApiToken;
+
+        public readonly ImmutableHashSet<ulong> CringeChannels;
+        public readonly ImmutableHashSet<char> FormattingCharacters;
         public readonly ImmutableHashSet<ulong> InvitesAllowedOnChannels;
         public readonly ImmutableHashSet<ulong> InvitesAllowedOnServers;
         public readonly ImmutableHashSet<ulong> ModeratorRoleIds;
         public readonly ImmutableHashSet<ulong> NoConversationsAllowedOnChannels;
-        public readonly ulong OutputGuildId;
         public readonly ImmutableHashSet<ulong> ProhibitCommandsFromUsers;
         public readonly ImmutableHashSet<ulong> ProhibitFormattingFromUsers;
 

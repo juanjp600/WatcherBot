@@ -8,8 +8,8 @@ namespace Bot600
 {
     public record DiscordConfig
     {
-        public readonly ImmutableHashSet<RestRole> ModeratorRoles;
         public readonly RestGuild OutputGuild;
+        public readonly ImmutableHashSet<RestRole> ModeratorRoles;
 
         public DiscordConfig(Config config, BaseSocketClient client)
         {
