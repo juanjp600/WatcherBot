@@ -1,12 +1,10 @@
-﻿module Bot600.FSharp
+﻿module Bot600.FSharp.CommitMessage
 
 open System
 open System.Text.RegularExpressions
-open FSharpPlus
-open FSharpPlus.Data
 open Octokit
 
-let parseHash (str: string) : Result<string, string> =
+let ParseHash (str: string) : Result<string, string> =
     let (|HashMatch|_|) (input: string) : Group option =
         /// Preceding character must not be part of a hash.
         /// Hash must be 5-40 characters.
@@ -27,7 +25,7 @@ let parseHash (str: string) : Result<string, string> =
     | HashMatch hash -> hash |> fun g -> g.Value |> Ok
     | _ -> Error "Error executing !commitmsg: argument is invalid"
 
-let deDupe (arr: Result<string, string> []) : Result<string, string> [] =
+let DeDuplicate (arr: Result<string, string> []) : Result<string, string> [] =
     let matches (s1: string) (s2: string) : bool =
         s1.StartsWith(s2, StringComparison.OrdinalIgnoreCase)
         || s2.StartsWith(s1, StringComparison.OrdinalIgnoreCase)
@@ -53,7 +51,7 @@ let deDupe (arr: Result<string, string> []) : Result<string, string> [] =
     Array.foldBack folder arr [] |> Array.ofList
 
 /// hash is a Result<string, string> here so that it can be integrated with Async nicely
-let tryGetCommit (client: GitHubClient) (hash: Result<string, string>) : Async<Result<GitHubCommit, string>> =
+let TryGetCommit (client: GitHubClient) (hash: Result<string, string>) : Async<Result<GitHubCommit, string>> =
     async {
         return
             hash
@@ -74,12 +72,12 @@ let tryGetCommit (client: GitHubClient) (hash: Result<string, string>) : Async<R
                     | e -> Error $"Error executing !commitmsg: %s{e.Message}")
     }
 
-let getCommitMessages (client: GitHubClient) (args: string []) : string =
+let GetCommitMessages (client: GitHubClient) (args: string []) : string =
     args
-    |> Array.map parseHash
+    |> Array.map ParseHash
     // De-dupe parsed hashes
-    |> deDupe
-    |> Array.map (tryGetCommit client)
+    |> DeDuplicate
+    |> Array.map (TryGetCommit client)
     // Fetch everything at once
     |> Async.Parallel
     |> Async.RunSynchronously

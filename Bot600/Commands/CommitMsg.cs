@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 using Discord.Commands;
+using static Bot600.FSharp.CommitMessage;
 
 namespace Bot600
 {
@@ -21,7 +22,7 @@ namespace Bot600
         {
             using (Context.Channel.EnterTypingState())
             {
-                string content = FSharp.getCommitMessages(botMain.GitHubClient, hashes);
+                string content = GetCommitMessages(botMain.GitHubClient, hashes);
                 if (content.Length <= 2000)
                 {
                     await ReplyAsync(content);

@@ -6,11 +6,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Library.fs" />
+        <Compile Include="CommitMessage.fs" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="FSharpPlus" Version="1.2.0" />
       <PackageReference Include="Octokit" Version="0.50.0" />
     </ItemGroup>
 
