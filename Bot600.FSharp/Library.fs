@@ -53,39 +53,34 @@ let deDupe (arr: Result<string, string> []) =
     Array.foldBack folder arr [] |> Array.ofList
 
 /// hash is a Result<string, string> here so that it can be integrated with Async nicely
-let tryGetCommit (client: GitHubClient) hash =
-    hash
-    |> Result.bind
-        (fun h ->
-            try
-                // Put the Async on the inside, so that the outer type is a Result
-                client.Repository.Commit.Get("Regalis11", "Barotrauma-development", h)
-                |> Async.AwaitTask
-                |> Ok
-            with
-            | :? AggregateException as e ->
-                e.InnerExceptions
-                |> Seq.map (fun e -> e.Message)
-                |> String.concat ", "
-                |> sprintf "Error executing !commitmsg: %s"
-                |> Error
-            | e -> Error $"Error executing !commitmsg: %s{e.Message}")
+let tryGetCommit (client: GitHubClient) (hash: Result<string, string>): Async<Result<GitHubCommit,string>> =
+    async {
+        return
+            hash
+            |> Result.bind
+                (fun h ->
+                    try
+                        // Put the Async on the inside, so that the outer type is a Result
+                        client.Repository.Commit.Get("Regalis11", "Barotrauma-Development", h)
+                        |> Async.AwaitTask
+                        |> Async.RunSynchronously
+                        |> Ok
+                    with
+                    | :? AggregateException as e ->
+                        e.InnerExceptions
+                        |> Seq.map (fun e -> e.Message)
+                        |> String.concat ", "
+                        |> sprintf "Error executing !commitmsg: %s"
+                        |> Error
+                    | e -> Error $"Error executing !commitmsg: %s{e.Message}")
+    }
 
 let getCommitMessages client args =
     args
     |> Array.map parseHash
     // De-dupe parsed hashes
     |> deDupe
-    |> Array.map
-        (fun h ->
-            // Turn Result<Async<_>, _> into Async<Result<_, _>>
-            async {
-                let commit =
-                    tryGetCommit client h
-                    |> (Result.map Async.RunSynchronously)
-
-                return commit
-            })
+    |> Array.map (tryGetCommit client)
     // Fetch everything at once
     |> Async.Parallel
     |> Async.RunSynchronously
