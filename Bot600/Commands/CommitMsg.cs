@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.IO;
 using System.Threading.Tasks;
-using Bot600.Monads;
 using Discord.Commands;
-using Octokit;
-using static System.Math;
 
 namespace Bot600
 {
@@ -20,55 +13,15 @@ namespace Bot600
             botMain = bm;
         }
 
-        private Result<GitHubCommit, string> GetCommitMessage(string hash)
-        {
-            //TODO: make this method async so we can use await instead of Result
-            try
-            {
-                GitHubClient ghClient = botMain.GitHubClient;
-                GitHubCommit commit = ghClient.Repository.Commit.Get("Regalis11", "Barotrauma-development", hash)
-                                              .Result;
-                return Result<GitHubCommit, string>.Ok(commit);
-            }
-            catch (AggregateException e)
-            {
-                return
-                    Result<GitHubCommit, string>
-                        .Error($"Error executing !commitmsg: {string.Join(", ", e.InnerExceptions.Select(inner => inner.Message))}");
-            }
-            catch (Exception e)
-            {
-                return Result<GitHubCommit, string>.Error($"Error executing !commitmsg: {e.Message}");
-            }
-        }
-
         [Command("commitmsg", RunMode = RunMode.Async)]
         [Summary("Gets a commit message.")]
         [Alias("c", "commit")]
         public async Task CommitMsg2([Summary("The hash or GitHub URL to get the commit message for")]
                                      params string[] hashes)
         {
-            await Task.Yield();
             using (Context.Channel.EnterTypingState())
             {
-                IEnumerable<string> result =
-                    hashes
-                        .Select(ParseHash)
-                        .ToHashSet(new HashComparer())
-                        .Select(hash => hash
-                                    // Try to get the commit message.
-                                    .Bind(GetCommitMessage))
-                        // Turn each Result into a string.
-                        .Select(r => r switch
-                                     {
-                                         // Format for Discord message.
-                                         Ok<GitHubCommit, string> o =>
-                                             $"`{o.Value.Commit.Sha[..Min(o.Value.Commit.Sha.Length, 10)]}: {o.Value.Commit.Message}`",
-                                         Error<GitHubCommit, string> e => e.Value,
-                                         _ => throw new ArgumentOutOfRangeException(nameof(r))
-                                     });
-
-                string content = string.Join("\n", result);
+                string content = FSharp.getCommitMessages(botMain.GitHubClient, hashes);
                 if (content.Length <= 2000)
                 {
                     await ReplyAsync(content);
@@ -87,33 +40,6 @@ namespace Bot600
                     Directory.Delete(directory, true);
                 }
             }
-        }
-
-        private static Result<string, string> ParseHash(string hash)
-        {
-            return string.IsNullOrWhiteSpace(hash)
-                       ? Result<string, string>.Error("Error executing !commitmsg: empty parameter")
-                       : Result<string, string>.Ok(hash)
-
-                                               // Extract hashes from GitHub URLs
-                                               .Map(h =>
-                                                    {
-                                                        h = Path.TrimEndingDirectorySeparator(h);
-                                                        if (h.Contains('/'))
-                                                        {
-                                                            h = h[(h.LastIndexOf('/') + 1)..];
-                                                        }
-
-                                                        hash = h;
-
-                                                        return h;
-                                                    })
-
-                                               // Regex to only match hexadecimal input
-                                               .Bind(h => Regex.IsMatch(h, @"^[0-9a-fA-F]{5,40}$")
-                                                              ? Result<string, string>.Ok(h)
-                                                              : Result<string, string>
-                                                                  .Error("Error executing !commitmsg: argument is invalid"));
         }
     }
 }

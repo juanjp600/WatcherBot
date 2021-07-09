@@ -91,7 +91,7 @@ namespace Bot600
 
             try
             {
-                if (msg is not SocketUserMessage usrMsg)
+                if (msg.Author.IsBot || msg is not SocketUserMessage usrMsg)
                 {
                     return;
                 }

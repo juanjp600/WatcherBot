@@ -31,4 +31,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Bot600.FSharp\Bot600.FSharp.fsproj" />
+  </ItemGroup>
+
 </Project>
