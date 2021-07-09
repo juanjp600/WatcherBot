@@ -84,14 +84,6 @@ namespace Bot600.Commands
             return reply;
         }
 
-        private class HyenaUrl
-        {
-            public HyenaUrl(string url)
-            {
-                Url = url;
-            }
-
-            public string Url { get; }
-        }
+        private record HyenaUrl(string Url);
     }
 }
