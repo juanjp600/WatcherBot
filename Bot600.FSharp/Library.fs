@@ -54,7 +54,7 @@ let tryGetCommit (client: GitHubClient) hash =
         (fun h ->
             try
                 // Put the Async on the inside, so that the outer type is a Result
-                client.Repository.Commit.Get("Jlobblet", "Bot600", h)
+                client.Repository.Commit.Get("Regalis11", "Barotrauma-development", h)
                 |> Async.AwaitTask
                 |> Ok
             with
