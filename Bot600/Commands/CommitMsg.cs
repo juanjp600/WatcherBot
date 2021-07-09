@@ -30,7 +30,7 @@ namespace Bot600
                 else
                 {
                     // Create a temporary directory
-                    string directory = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+                    string directory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                     Directory.CreateDirectory(directory);
                     // Save the string to a file there
                     string filepath = Path.Combine(directory, "commits.txt");
