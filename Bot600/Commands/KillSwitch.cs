@@ -23,7 +23,7 @@ namespace Bot600.Commands
             SocketUser? user = Context.Message.Author;
             if (await botMain.IsUserModerator(user) == IsModerator.No)
             {
-                ReplyAsync($"Error executing !killswitch: {user.Mention} is not a moderator");
+                await ReplyAsync($"Error executing !killswitch: {user.Mention} is not a moderator");
                 return;
             }
 

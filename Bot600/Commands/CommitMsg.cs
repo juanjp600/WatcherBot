@@ -22,7 +22,7 @@ namespace Bot600
         {
             using (Context.Channel.EnterTypingState())
             {
-                string content = GetCommitMessages(botMain.GitHubClient, hashes);
+                string content = await GetCommitMessages(botMain.GitHubClient, hashes);
                 if (content.Length <= 2000)
                 {
                     await ReplyAsync(content);
@@ -33,7 +33,7 @@ namespace Bot600
                     string directory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                     Directory.CreateDirectory(directory);
                     // Save the string to a file there
-                    string filepath = Path.Combine(directory, "commits.txt");
+                    string filepath = Path.Combine(directory, "commits.md");
                     await File.WriteAllTextAsync(filepath, content);
                     // Send the file to Discord
                     await Context.Channel.SendFileAsync(filepath);

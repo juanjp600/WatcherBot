@@ -82,7 +82,7 @@ namespace Bot600
                 {
                     if (t.Result == IsModerator.No)
                     {
-                        msg.DeleteAsync();
+                        await msg.DeleteAsync();
                     }
                 }
 
@@ -202,7 +202,7 @@ namespace Bot600
 
             // Execute the command with the command context we just
             // created, along with the service provider for precondition checks.
-            commandService.ExecuteAsync(context,
+            await commandService.ExecuteAsync(context,
                                         argPos,
                                         commandServiceProvider);
         }

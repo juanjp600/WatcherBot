@@ -47,7 +47,7 @@ namespace Bot600.Commands
         {
             string reply = await GetReply(Endpoint);
 
-            ReplyAsync(reply);
+            await ReplyAsync(reply);
         }
 
         [Command("hyena", RunMode = RunMode.Async)]
@@ -58,7 +58,7 @@ namespace Bot600.Commands
             var requestUriString = $"{Endpoint}/id/{id}";
             string reply = await GetReply(requestUriString);
 
-            ReplyAsync(reply);
+            await ReplyAsync(reply);
         }
 
         private static async Task<HyenaUrl?> QueryApi(string requestUriString)

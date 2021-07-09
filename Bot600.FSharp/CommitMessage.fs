@@ -2,6 +2,7 @@
 
 open System
 open System.Text.RegularExpressions
+open System.Threading.Tasks
 open Octokit
 
 let ParseHash (str: string) : Result<string, string> =
@@ -58,7 +59,7 @@ let TryGetCommit (client: GitHubClient) (hash: Result<string, string>) : Async<R
             |> Result.bind
                 (fun h ->
                     try
-                        client.Repository.Commit.Get("Regalis11", "Barotrauma-Development", h)
+                        client.Repository.Commit.Get("Jlobblet", "Bot600", h)
                         |> Async.AwaitTask
                         |> Async.RunSynchronously
                         |> Ok
@@ -72,17 +73,21 @@ let TryGetCommit (client: GitHubClient) (hash: Result<string, string>) : Async<R
                     | e -> Error $"Error executing !commitmsg: %s{e.Message}")
     }
 
-let GetCommitMessages (client: GitHubClient) (args: string []) : string =
-    args
-    |> Array.map ParseHash
-    // De-dupe parsed hashes
-    |> DeDuplicate
-    |> Array.map (TryGetCommit client)
-    // Fetch everything at once
-    |> Async.Parallel
-    |> Async.RunSynchronously
-    |> Array.map
-        (function
-        | Ok commit -> $"`{commit.Sha.Substring(0, 10)}: {commit.Commit.Message}`"
-        | Error message -> message)
-    |> String.concat "\n"
+let GetCommitMessages (client: GitHubClient) (args: string []) : Task<string> =
+    async {
+        return
+            args
+            |> Array.map ParseHash
+            // De-dupe parsed hashes
+            |> DeDuplicate
+            |> Array.map (TryGetCommit client)
+            // Fetch everything at once
+            |> Async.Parallel
+            |> Async.RunSynchronously
+            |> Array.map
+                (function
+                | Ok commit -> $"`{commit.Sha.Substring(0, 10)}: {commit.Commit.Message}`"
+                | Error message -> message)
+            |> String.concat "\n"
+    }
+    |> Async.StartAsTask

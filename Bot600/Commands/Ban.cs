@@ -22,7 +22,7 @@ namespace Bot600.Commands
             SocketUser? banner = Context.Message.Author;
             if (await botMain.IsUserModerator(banner) == IsModerator.No)
             {
-                ReplyAsync($"Error executing !ban: {banner.Mention} is not a moderator");
+                await ReplyAsync($"Error executing !ban: {banner.Mention} is not a moderator");
                 return;
             }
 
@@ -59,8 +59,9 @@ namespace Bot600.Commands
                 // ignored
             }
 
-            Context.Guild.AddBanAsync(user, reason: reason);
-            Context.Message.Channel.SendMessageAsync(feedback);
+            await Task.WhenAll(Context.Message.Channel.SendMessageAsync(feedback),
+                               Context.Guild.AddBanAsync(user, reason: reason)
+                              );
         }
 
         [Command("ban", RunMode = RunMode.Async)]
@@ -95,7 +96,7 @@ namespace Bot600.Commands
         public async Task BanAnon([Summary("User")] IUser user,
                                   [Remainder] [Summary("Ban reason")] string? reason = null)
         {
-            BanMember(user, reason, Anonymous.Yes);
+            await BanMember(user, reason, Anonymous.Yes);
         }
     }
 }
