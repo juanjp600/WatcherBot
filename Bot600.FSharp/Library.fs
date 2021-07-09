@@ -6,8 +6,8 @@ open FSharpPlus
 open FSharpPlus.Data
 open Octokit
 
-let parseHash (str: string) =
-    let (|HashMatch|_|) input =
+let parseHash (str: string) : Result<string, string> =
+    let (|HashMatch|_|) (input: string) : Group option =
         /// Preceding character must not be part of a hash.
         /// Hash must be 5-40 characters.
         /// Optional `/` for URLs, then end of string.
@@ -27,19 +27,19 @@ let parseHash (str: string) =
     | HashMatch hash -> hash |> fun g -> g.Value |> Ok
     | _ -> Error "Error executing !commitmsg: argument is invalid"
 
-let deDupe (arr: Result<string, string> []) =
-    let matches (s1: string) (s2: string) =
+let deDupe (arr: Result<string, string> []) : Result<string, string> [] =
+    let matches (s1: string) (s2: string) : bool =
         s1.StartsWith(s2, StringComparison.OrdinalIgnoreCase)
         || s2.StartsWith(s1, StringComparison.OrdinalIgnoreCase)
 
-    let guard s1 acc =
+    let guard (s1: string) (acc: Result<string, string> list) : bool =
         acc
         |> List.exists
             (function
             | Ok v2 -> matches s1 v2
             | Error v2 -> matches s1 v2)
 
-    let folder (elt: Result<string, string>) (acc: Result<string, string> list) =
+    let folder (elt: Result<string, string>) (acc: Result<string, string> list) : Result<string, string> list =
         if
             match elt with
             | Ok v1
@@ -53,7 +53,7 @@ let deDupe (arr: Result<string, string> []) =
     Array.foldBack folder arr [] |> Array.ofList
 
 /// hash is a Result<string, string> here so that it can be integrated with Async nicely
-let tryGetCommit (client: GitHubClient) (hash: Result<string, string>): Async<Result<GitHubCommit,string>> =
+let tryGetCommit (client: GitHubClient) (hash: Result<string, string>) : Async<Result<GitHubCommit, string>> =
     async {
         return
             hash
@@ -75,7 +75,7 @@ let tryGetCommit (client: GitHubClient) (hash: Result<string, string>): Async<Re
                     | e -> Error $"Error executing !commitmsg: %s{e.Message}")
     }
 
-let getCommitMessages client args =
+let getCommitMessages (client: GitHubClient) (args: string []) : string =
     args
     |> Array.map parseHash
     // De-dupe parsed hashes
