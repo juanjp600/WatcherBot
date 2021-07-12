@@ -53,7 +53,7 @@ namespace Bot600
             watcherDatabaseContext = new WatcherDatabaseContext();
         }
 
-        private DiscordConfig? DiscordConfig { get; set; }
+        public DiscordConfig? DiscordConfig { get; set; }
 
         public void Dispose()
         {

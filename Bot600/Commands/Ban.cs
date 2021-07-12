@@ -60,7 +60,7 @@ namespace Bot600.Commands
             }
 
             await Task.WhenAll(Context.Message.Channel.SendMessageAsync(feedback),
-                               Context.Guild.AddBanAsync(user, reason: reason)
+                               botMain.DiscordConfig.OutputGuild.AddBanAsync(user, reason: reason)
                               );
         }
 
