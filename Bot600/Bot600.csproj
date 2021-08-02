@@ -35,4 +35,8 @@
     <ProjectReference Include="..\Bot600.FSharp\Bot600.FSharp.fsproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations" />
+  </ItemGroup>
+
 </Project>
