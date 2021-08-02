@@ -181,6 +181,10 @@ namespace Bot600
             catch (Exception e)
             {
                 Console.WriteLine($"{e.Message}\n{e.StackTrace}");
+                if (e.InnerException is not null)
+                {
+                    Console.WriteLine($"{e.InnerException.Message}\n{e.InnerException.StackTrace}");
+                }
                 throw;
             }
         }

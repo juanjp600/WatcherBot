@@ -37,20 +37,7 @@ namespace Bot600.Models
         /// </summary>
         public uint CringeMessages { get; private set; }
 
-        /// <summary>
-        ///     Whether the user is currently classified as cringe or not.
-        /// </summary>
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)] 
-        public bool IsCringeBool
-        {
-            get => TotalMessages > 3 && (double) CringeMessages / TotalMessages > 0.5;
-            // ReSharper disable once UnusedMember.Local
-            // ReSharper disable once ValueParameterNotUsed
-            // This is needed for EF core
-            private set { }
-        }
-        
-        public IsCringe IsCringe => IsCringeBool ? IsCringe.Yes : IsCringe.No;
+        public IsCringe IsCringe => TotalMessages > 3 && (double) CringeMessages / TotalMessages > 0.5 ? IsCringe.Yes : IsCringe.No;
 
         public static User GetOrCreateUser(WatcherDatabaseContext db, ulong userId)
         {

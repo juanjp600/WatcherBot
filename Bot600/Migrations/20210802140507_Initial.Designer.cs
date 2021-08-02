@@ -8,8 +8,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bot600.Migrations
 {
     [DbContext(typeof(WatcherDatabaseContext))]
-    [Migration("20210707213652_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20210802140507_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -24,9 +24,6 @@ namespace Bot600.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<uint>("CringeMessages")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsCringeBool")
                         .HasColumnType("INTEGER");
 
                     b.Property<uint>("TotalMessages")

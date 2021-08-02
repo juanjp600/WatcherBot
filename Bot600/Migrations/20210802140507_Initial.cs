@@ -2,7 +2,7 @@
 
 namespace Bot600.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -14,8 +14,7 @@ namespace Bot600.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     UserId = table.Column<ulong>(type: "INTEGER", nullable: false),
                     TotalMessages = table.Column<uint>(type: "INTEGER", nullable: false),
-                    CringeMessages = table.Column<uint>(type: "INTEGER", nullable: false),
-                    IsCringeBool = table.Column<bool>(type: "INTEGER", nullable: false)
+                    CringeMessages = table.Column<uint>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
