@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -8,7 +9,8 @@ namespace Bot600.Models
     {
         private static readonly Lazy<string> ConnectionString =
             new(() => new ConfigurationBuilder().AddJsonFile("appsettings.json").Build()
-                                                .GetConnectionString("WatcherDatabase"));
+                                                .GetConnectionString("WatcherDatabase")
+                                                .Replace("$WD", Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)));
 
 #pragma warning disable 8618
         // ReSharper disable once UnusedAutoPropertyAccessor.Global
