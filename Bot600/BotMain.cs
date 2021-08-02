@@ -8,6 +8,7 @@ using Discord;
 using Discord.Commands;
 using Discord.Rest;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 using Octokit;
 using User = Bot600.Models.User;
 
@@ -129,7 +130,7 @@ namespace Bot600
                     return;
                 }
 
-                static bool MessageHasOneAttachment(SocketMessage message)
+                bool MessageWithinAttachmentLimits(SocketMessage message)
                 {
                     bool insecureLink = message.Content.Contains("http://", StringComparison.OrdinalIgnoreCase);
                     bool authorIsBot = message.Author.IsBot;
@@ -139,13 +140,15 @@ namespace Bot600
                                                                                    a.Height >= 16);
                     int numberLinks = message.Content.CountSubstrings("https://");
 
+                    int sum = numberWellSizedAttachments + numberLinks;
+
                     return
-                        (authorIsBot || numberWellSizedAttachments + numberLinks == 1)
+                        (authorIsBot || Config.AttachmentLimits[message.Channel.Id].Contains(numberWellSizedAttachments + numberLinks))
                         && numberWellSizedAttachments == message.Attachments.Count
                         && !insecureLink;
                 }
 
-                if (Config.NoConversationsAllowedOnChannels.Contains(msg.Channel.Id) && !MessageHasOneAttachment(msg))
+                if (Config.AttachmentLimits.ContainsKey(msg.Channel.Id) && !MessageWithinAttachmentLimits(msg))
                 {
                     DeleteMsg();
                     return;
@@ -165,7 +168,22 @@ namespace Bot600
                     IsCringe channelIsCringe =
                         Config.CringeChannels.Contains(usrMsg.Channel.Id) ? IsCringe.Yes : IsCringe.No;
                     user.NewMessage(channelIsCringe);
-                    db.SaveChanges();
+                    try
+                    {
+                        db.SaveChanges();
+                    }
+                    catch (DbUpdateException exc)
+                    {
+                        Console.WriteLine("db.SaveChanges threw an exception:");
+                        if (exc.InnerException is not null)
+                        {
+                            Console.WriteLine($"{exc.InnerException.Message}\n{exc.InnerException.StackTrace}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"{exc.Message}\n{exc.StackTrace}");
+                        }
+                    }
                     // it's cringe to bool to cringe
                     return (channelIsCringe.ToBool() && user.IsCringe.ToBool()).ToCringe();
                 }
