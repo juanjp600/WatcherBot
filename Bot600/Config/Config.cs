@@ -1,10 +1,11 @@
 using System.Collections.Immutable;
 using Microsoft.Extensions.Configuration;
 
-namespace Bot600
+namespace Bot600.Config
 {
     public record Config
     {
+        // @formatter: off
         public readonly BanTemplate BanTemplate;
         public readonly IConfigurationRoot Configuration;
 
@@ -19,20 +20,22 @@ namespace Bot600
         public readonly ImmutableHashSet<ulong> ModeratorRoleIds;
         public readonly ImmutableHashSet<ulong> NoConversationsAllowedOnChannels;
         public readonly ImmutableHashSet<ulong> ProhibitCommandsFromUsers;
+
         public readonly ImmutableHashSet<ulong> ProhibitFormattingFromUsers;
+        // @formatter:on
 
         public Config(IConfigurationBuilder builder)
         {
             Configuration = builder.Build();
 
-            GitHubToken = Configuration.GetSection("GitHubToken").Get<string>();
-            OutputGuildId = Configuration.GetSection("Target").Get<ulong>();
+            GitHubToken     = Configuration.GetSection("GitHubToken").Get<string>();
+            OutputGuildId   = Configuration.GetSection("Target").Get<ulong>();
             DiscordApiToken = Configuration.GetSection("Token").Get<string>();
 
             BanTemplate = BanTemplate.FromConfig(this);
 
             //Cruelty :)
-            CringeChannels = Configuration.GetSection("CringeChannels").Get<ulong[]>().ToImmutableHashSet();
+            CringeChannels       = Configuration.GetSection("CringeChannels").Get<ulong[]>().ToImmutableHashSet();
             FormattingCharacters = Configuration.GetSection("FormattingCharacters").Get<string>().ToImmutableHashSet();
             InvitesAllowedOnChannels =
                 Configuration.GetSection("InvitesAllowedOnChannels").Get<ulong[]>().ToImmutableHashSet();
@@ -40,17 +43,17 @@ namespace Bot600
                 Configuration.GetSection("InvitesAllowedOnServers").Get<ulong[]>().ToImmutableHashSet();
             ModeratorRoleIds = Configuration.GetSection("ModeratorRoles").Get<ulong[]>().ToImmutableHashSet();
             NoConversationsAllowedOnChannels = Configuration.GetSection("NoConversationsAllowedOnChannels")
-                                                            .Get<ulong[]>().ToImmutableHashSet();
-            ProhibitCommandsFromUsers = Configuration.GetSection("ProhibitCommandsFromUsers").Get<ulong[]>()
+                                                            .Get<ulong[]>()
+                                                            .ToImmutableHashSet();
+            ProhibitCommandsFromUsers = Configuration.GetSection("ProhibitCommandsFromUsers")
+                                                     .Get<ulong[]>()
                                                      .ToImmutableHashSet();
-            ProhibitFormattingFromUsers = Configuration.GetSection("ProhibitFormattingFromUsers").Get<ulong[]>()
+            ProhibitFormattingFromUsers = Configuration.GetSection("ProhibitFormattingFromUsers")
+                                                       .Get<ulong[]>()
                                                        .ToImmutableHashSet();
         }
 
-        public static Config DefaultConfig()
-        {
-            return new(new ConfigurationBuilder()
-                           .AddJsonFile("appsettings.json", false, false));
-        }
+        public static Config DefaultConfig() =>
+            new(new ConfigurationBuilder().AddJsonFile("appsettings.json", false, false));
     }
 }

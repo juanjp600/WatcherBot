@@ -1,57 +1,60 @@
 ﻿using System.Threading.Tasks;
+using Bot600.Config;
 using Bot600.Utils;
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
+using DisCatSharp;
+using DisCatSharp.CommandsNext;
+using DisCatSharp.CommandsNext.Attributes;
+using DisCatSharp.Entities;
 
 namespace Bot600.Commands
 {
-    public class BanCommandModule : ModuleBase<SocketCommandContext>
+    // ReSharper disable once UnusedType.Global
+    public class BanCommandModule : BaseCommandModule
     {
-        private readonly BanTemplate banTemplate;
         private readonly BotMain botMain;
 
-        public BanCommandModule(BotMain bm)
-        {
-            botMain = bm;
-            banTemplate = bm.Config.BanTemplate;
-        }
+        public BanCommandModule(BotMain bm) => botMain = bm;
 
-        private async Task BanMember(IUser user, string? reason, Anonymous anon = Anonymous.No)
+        private BanTemplate BanTemplate => botMain.Config.BanTemplate;
+
+        private async Task BanMember(
+            CommandContext context,
+            DiscordMember member,
+            string? reason,
+            Anonymous anon = Anonymous.No)
         {
-            SocketUser? banner = Context.Message.Author;
+            DiscordUser banner = context.User;
             if (await botMain.IsUserModerator(banner) == IsModerator.No)
             {
-                await ReplyAsync($"Error executing !ban: {banner.Mention} is not a moderator");
+                await context.RespondAsync($"Error executing !ban: {banner.Mention} is not a moderator");
                 return;
             }
 
-            IDMChannel? baneeDm = await user.GetOrCreateDMChannelAsync();
+            DiscordDmChannel baneeDm = await member.CreateDmChannelAsync();
 
             string bannerStr;
             if (anon == Anonymous.Yes)
             {
-                bannerStr = banTemplate.DefaultAppeal;
+                bannerStr = BanTemplate.DefaultAppeal;
             }
             else
             {
                 bannerStr = banner.ToString();
-                bannerStr = bannerStr != banTemplate.DefaultAppeal
-                                ? $"`{bannerStr}` or `{banTemplate.DefaultAppeal}`"
-                                : $"`{bannerStr}`";
+                bannerStr = bannerStr != BanTemplate.DefaultAppeal
+                    ? $"`{bannerStr}` or `{BanTemplate.DefaultAppeal}`"
+                    : $"`{bannerStr}`";
             }
 
-            string banMsg = banTemplate.Template
-                                       .Replace("[reason]", reason ?? "No reason provided")
+            string banMsg = BanTemplate.Template.Replace("[reason]", reason ?? "No reason provided")
                                        .Replace("[banner]", bannerStr);
 
-            string feedback = $"{user.Mention} has been banned. The appeal message could not be sent.\n";
+            string feedback = $"{member.Mention} has been banned. The appeal message could not be sent.\n";
             try
             {
-                IMessage? directMsg = await baneeDm.SendMessageAsync(banMsg);
+                DiscordMessage directMsg = await baneeDm.SendMessageAsync(banMsg);
                 if (directMsg is not null && directMsg.Id != 0)
                 {
-                    feedback = $"{user.Mention} has been banned. The message sent was the following:\n{banMsg}";
+                    feedback = $"{member.Mention} has been banned. The message sent was the following:\n{banMsg}";
                 }
             }
             catch
@@ -59,44 +62,53 @@ namespace Bot600.Commands
                 // ignored
             }
 
-            await Task.WhenAll(Context.Message.Channel.SendMessageAsync(feedback),
-                               botMain.DiscordConfig.OutputGuild.AddBanAsync(user, reason: reason)
-                              );
+            await Task.WhenAll(context.Message.Channel.SendMessageAsync(feedback),
+                               botMain.DiscordConfig.OutputGuild.BanMemberAsync(member, reason: reason));
         }
 
-        [Command("ban", RunMode = RunMode.Async)]
-        [Summary("Bans a player and sends them an appeal message.")]
-        [RequireUserPermission(GuildPermission.BanMembers, ErrorMessage = "Only moderators can issue this command")]
-        public async Task Ban([Summary("User")] ulong userId, [Remainder] [Summary("Ban reason")] string? reason = null)
-        {
-            await Ban(await Context.Client.Rest.GetUserAsync(userId), reason);
-        }
+        [Command("ban")]
+        [Description("Ban a member and send them an appeal message via DMs, including your username for contact.")]
+        [RequirePermissionInGuild(Permissions.BanMembers)]
+        [RequireModeratorRoleInGuild]
+        [RequireOutputGuild]
+        public async Task Ban(
+            CommandContext context,
+            [Description("ID of user to ban")] ulong memberId,
+            string? reason = null) =>
+            await BanMember(context, await botMain.DiscordConfig.OutputGuild.GetMemberAsync(memberId), reason);
 
-        [Command("ban", RunMode = RunMode.Async)]
-        [Summary("Bans a player and sends them an appeal message.")]
-        [RequireUserPermission(GuildPermission.BanMembers, ErrorMessage = "Only moderators can issue this command")]
-        public async Task Ban([Summary("User")] IUser user, [Remainder] [Summary("Ban reason")] string? reason = null)
-        {
-            await BanMember(user, reason);
-        }
+        [Command("ban")]
+        [Description("Ban a member and send them an appeal message via DMs, including your username for contact.")]
+        [RequirePermissionInGuild(Permissions.BanMembers)]
+        [RequireModeratorRoleInGuild]
+        [RequireOutputGuild]
+        public async Task Ban(CommandContext context, DiscordMember member, [RemainingText] string? reason = null) =>
+            await BanMember(context, member, reason);
 
 
-        [Command("ban_anon", RunMode = RunMode.Async)]
-        [Summary("Bans a player and sends them an appeal message.")]
-        [RequireUserPermission(GuildPermission.BanMembers, ErrorMessage = "Only moderators can issue this command")]
-        public async Task BanAnon([Summary("User")] ulong userId,
-                                  [Remainder] [Summary("Ban reason")] string? reason = null)
-        {
-            await BanAnon(await Context.Client.Rest.GetUserAsync(userId), reason);
-        }
+        [Command("ban_anon")]
+        [Description("Ban a member and send them an appeal message via DMs with a default username for contact.")]
+        [RequirePermissionInGuild(Permissions.BanMembers)]
+        [RequireModeratorRoleInGuild]
+        [RequireOutputGuild]
+        public async Task BanAnon(
+            CommandContext context,
+            [Description("ID of user to ban")] ulong memberId,
+            [RemainingText] string? reason = null) =>
+            await BanMember(context,
+                            await botMain.DiscordConfig.OutputGuild.GetMemberAsync(memberId),
+                            reason,
+                            Anonymous.Yes);
 
-        [Command("ban_anon", RunMode = RunMode.Async)]
-        [Summary("Bans a player and sends them an appeal message.")]
-        [RequireUserPermission(GuildPermission.BanMembers, ErrorMessage = "Only moderators can issue this command")]
-        public async Task BanAnon([Summary("User")] IUser user,
-                                  [Remainder] [Summary("Ban reason")] string? reason = null)
-        {
-            await BanMember(user, reason, Anonymous.Yes);
-        }
+        [Command("ban_anon")]
+        [Description("Ban a member and send them an appeal message via DMs with a default username for contact.")]
+        [RequirePermissionInGuild(Permissions.BanMembers)]
+        [RequireModeratorRoleInGuild]
+        [RequireOutputGuild]
+        public async Task BanAnon(
+            CommandContext context,
+            DiscordMember member,
+            [RemainingText] string? reason = null) =>
+            await BanMember(context, member, reason, Anonymous.Yes);
     }
 }

@@ -7,7 +7,8 @@ namespace Bot600.Models
     public class WatcherDatabaseContext : DbContext
     {
         private static readonly Lazy<string> ConnectionString =
-            new(() => new ConfigurationBuilder().AddJsonFile("appsettings.json").Build()
+            new(() => new ConfigurationBuilder().AddJsonFile("appsettings.json")
+                                                .Build()
                                                 .GetConnectionString("WatcherDatabase"));
 
 #pragma warning disable 8618
@@ -15,9 +16,7 @@ namespace Bot600.Models
         public DbSet<User> Users { get; set; }
 #pragma warning restore 8618
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
             optionsBuilder.UseSqlite(ConnectionString.Value);
-        }
     }
 }

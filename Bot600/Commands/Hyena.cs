@@ -1,64 +1,42 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
+using Bot600.Utils;
+using DisCatSharp.CommandsNext;
+using DisCatSharp.CommandsNext.Attributes;
 using Newtonsoft.Json;
 
 namespace Bot600.Commands
 {
-    public class HyenaCommandModule : ModuleBase<SocketCommandContext>
+    // ReSharper disable once UnusedType.Global
+    [Hidden]
+    public class HyenaCommandModule : BaseCommandModule
     {
         private const string Endpoint = "https://api.yeen.land";
         private static readonly HttpClient HttpClient = new();
-        private readonly BotMain botMain;
 
-        public HyenaCommandModule(BotMain bm)
-        {
-            botMain = bm;
-        }
+        [Command("sus")]
+        [Description("smh my head")]
+        public async Task Sus(CommandContext context) =>
+            await context.RespondDmAsync("https://tenor.com/view/keanu-reeves-knife-gif-19576998");
 
-        [Command("sus", RunMode = RunMode.Async)]
-        [Summary("smh my head")]
-        public async Task Sus()
-        {
-            SocketUser? author = Context.Message.Author;
-            IDMChannel? dm = await author.GetOrCreateDMChannelAsync();
-            await dm.SendMessageAsync("https://tenor.com/view/keanu-reeves-knife-gif-19576998");
-        }
-
-        [Command("help", RunMode = RunMode.Async)]
-        [Summary("Lists commands that are available to all users.")]
-        public async Task Help()
-        {
-            SocketUser? author = Context.Message.Author;
-            IDMChannel? dm = await author.GetOrCreateDMChannelAsync();
-            await dm.SendMessageAsync(
-                                      "```" +
-                                      "!help: Shows this list of commands.\n" +
-                                      "!c [hash]: Shows the description of a given commit on Barotrauma's private GitHub repository." +
-                                      "```");
-        }
-
-        [Command("hyena", RunMode = RunMode.Async)]
-        [Summary("hyena images")]
-        [Alias("yeen")]
-        public async Task Hyena()
+        [Command("hyena")]
+        [Aliases("yeen")]
+        [Description("hyena images")]
+        public async Task Hyena(CommandContext context)
         {
             string reply = await GetReply(Endpoint);
 
-            await ReplyAsync(reply);
+            await context.RespondAsync(reply);
         }
 
-        [Command("hyena", RunMode = RunMode.Async)]
-        [Summary("hyena images")]
-        [Alias("yeen")]
-        public async Task Hyena(ulong id)
+        [Command("hyena")]
+        [Description("fetch hyena images by id")]
+        public async Task Hyena(CommandContext context, [Description("id of hyena photo to fetch")] ulong id)
         {
             var requestUriString = $"{Endpoint}/id/{id}";
             string reply = await GetReply(requestUriString);
 
-            await ReplyAsync(reply);
+            await context.RespondAsync(reply);
         }
 
         private static async Task<HyenaUrl?> QueryApi(string requestUriString)
