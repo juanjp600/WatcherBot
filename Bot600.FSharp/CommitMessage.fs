@@ -59,7 +59,7 @@ let TryGetCommit (client: GitHubClient) (hash: Result<string, string>) : Async<R
             |> Result.bind
                 (fun h ->
                     try
-                        client.Repository.Commit.Get("Jlobblet", "Bot600", h)
+                        client.Repository.Commit.Get("Regalis11", "Barotrauma-development", h)
                         |> Async.AwaitTask
                         |> Async.RunSynchronously
                         |> Ok
