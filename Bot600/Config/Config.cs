@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
@@ -18,10 +16,24 @@ namespace Bot600.Config
 
         public readonly struct Range
         {
-            public readonly int Min; public readonly int Max;
-            public Range(int min, int max) { Min = min; Max = max; }
-            public Range(string str) { var split = str.Split(','); Min = int.Parse(split[0]); Max = int.Parse(split[1]); }
+            public readonly int Min;
+            public readonly int Max;
+
+            public Range(int min, int max)
+            {
+                Min = min;
+                Max = max;
+            }
+
+            public Range(string str)
+            {
+                string[]? split = str.Split(',');
+                Min = int.Parse(split[0]);
+                Max = int.Parse(split[1]);
+            }
+
             public bool Contains(int v) => Min <= v && Max >= v;
+
             public override string ToString() => $"[{Min}, {Max}]";
         }
 
@@ -54,14 +66,16 @@ namespace Bot600.Config
             InvitesAllowedOnServers =
                 Configuration.GetSection("InvitesAllowedOnServers").Get<ulong[]>().ToImmutableHashSet();
             ModeratorRoleIds = Configuration.GetSection("ModeratorRoles").Get<ulong[]>().ToImmutableHashSet();
-            AttachmentLimits =
-                Configuration.GetSection("AttachmentLimits")
-                .GetChildren().Select(c => new KeyValuePair<ulong, Range>(ulong.Parse(c.Key), new Range(c.Get<string>())))
-                .ToImmutableDictionary();
-            ProhibitCommandsFromUsers = (Configuration.GetSection("ProhibitCommandsFromUsers").Get<ulong[]>() ?? Enumerable.Empty<ulong>())
-                                                     .ToImmutableHashSet();
-            ProhibitFormattingFromUsers = (Configuration.GetSection("ProhibitFormattingFromUsers").Get<ulong[]>() ?? Enumerable.Empty<ulong>())
-                                                       .ToImmutableHashSet();
+            AttachmentLimits = Configuration.GetSection("AttachmentLimits")
+                                            .GetChildren()
+                                            .ToImmutableDictionary(c => ulong.Parse(c.Key),
+                                                                   c => new Range(c.Get<string>()));
+            ProhibitCommandsFromUsers =
+                (Configuration.GetSection("ProhibitCommandsFromUsers").Get<ulong[]>() ?? Enumerable.Empty<ulong>())
+                .ToImmutableHashSet();
+            ProhibitFormattingFromUsers =
+                (Configuration.GetSection("ProhibitFormattingFromUsers").Get<ulong[]>() ?? Enumerable.Empty<ulong>())
+                .ToImmutableHashSet();
         }
 
         public static Config DefaultConfig() =>

@@ -5,6 +5,7 @@ using Bot600.Models;
 using DisCatSharp;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bot600.Utils
 {
@@ -44,7 +45,7 @@ namespace Bot600.Utils
             return GeneralCondition(args.Message) && Condition() ? DeleteMsg(args.Message) : Task.CompletedTask;
         }
 
-        public Task MessageHasOneAttachment(DiscordClient sender, MessageCreateEventArgs args)
+        public Task MessageWithinAttachmentLimits(DiscordClient sender, MessageCreateEventArgs args)
         {
             bool Condition()
             {
@@ -53,11 +54,11 @@ namespace Bot600.Utils
                     || a.Height is null
                     || a.Width >= 16 && a.Height >= 16);
                 int numberLinks = args.Message.Content.CountSubstrings("https://");
+                int sum = numberWellSizedAttachments + numberLinks;
 
-
-                return botMain.Config.NoConversationsAllowedOnChannels.Contains(args.Channel.Id)
-                       && numberWellSizedAttachments + numberLinks == 1
-                       && numberWellSizedAttachments == args.Message.Attachments.Count
+                return botMain.Config.AttachmentLimits.ContainsKey(args.Channel.Id)
+                       && botMain.Config.AttachmentLimits[args.Channel.Id].Contains(sum)
+                       && sum == args.Message.Attachments.Count
                        && !insecureLink;
             }
 
@@ -84,7 +85,16 @@ namespace Bot600.Utils
                     if (args.Message.Channel is not DiscordDmChannel)
                     {
                         user.NewMessage(channelIsCringe);
-                        databaseContext.SaveChanges();
+                        try
+                        {
+                            databaseContext.SaveChanges();
+                        }
+                        catch (DbUpdateException exc)
+                        {
+                            Console.WriteLine($"{nameof(databaseContext.SaveChanges)} threw an exception:");
+                            Console.WriteLine($"{exc.InnerException?.Message ?? exc.Message}");
+                            Console.WriteLine($"{exc.InnerException?.StackTrace ?? exc.StackTrace}");
+                        }
                     }
 
                     // it's cringe to bool to cringe

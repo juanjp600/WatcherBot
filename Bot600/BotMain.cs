@@ -54,7 +54,7 @@ namespace Bot600
             Client.MessageCreated += HandleCommand;
             Client.MessageCreated += deleters.ContainsDisallowedInvite;
             Client.MessageCreated += deleters.DeleteCringeMessages;
-            Client.MessageCreated += deleters.MessageHasOneAttachment;
+            Client.MessageCreated += deleters.MessageWithinAttachmentLimits;
             Client.MessageCreated += deleters.ProhibitFormattingFromUsers;
 
             ServiceProvider services = new ServiceCollection().AddSingleton(this).BuildServiceProvider();
