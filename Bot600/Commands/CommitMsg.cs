@@ -3,7 +3,9 @@ using System.Threading.Tasks;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
+using Octokit;
 using static Bot600.FSharp.CommitMessage;
+using FileMode = System.IO.FileMode;
 
 namespace Bot600.Commands
 {
@@ -44,6 +46,23 @@ namespace Bot600.Commands
                     Directory.Delete(directory, true);
                 }
             }
+        }
+
+        [Command("issue")]
+        [Aliases("i")]
+        public async Task Issue(CommandContext context)
+        {
+            await context.RespondAsync(
+                "You can open an issue for that!\n<https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md>");
+        }
+
+        [Command("issue")]
+        [Aliases("pr", "pull")]
+        [Description("Find a particular issue or pull request")]
+        public async Task Issue(CommandContext context, int number)
+        {
+            Issue issue = await botMain.GitHubClient.Issue.Get("Regalis11", "Barotrauma", number);
+            await context.RespondAsync(issue.HtmlUrl);
         }
     }
 }
