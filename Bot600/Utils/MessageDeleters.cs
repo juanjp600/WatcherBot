@@ -20,7 +20,11 @@ namespace Bot600.Utils
             databaseContext = new WatcherDatabaseContext();
         }
 
-        public void Dispose() => databaseContext.Dispose();
+        public void Dispose()
+        {
+            databaseContext.Dispose();
+            GC.SuppressFinalize(this);
+        }
 
         private bool GeneralCondition(DiscordMessage msg) => !(msg.Author.IsBot || msg.Channel is DiscordDmChannel);
 
