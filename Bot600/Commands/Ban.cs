@@ -70,7 +70,7 @@ namespace Bot600.Commands
         [Description("Ban a member and send them an appeal message via DMs, including your username for contact.")]
         [RequirePermissionInGuild(Permissions.BanMembers)]
         [RequireModeratorRoleInGuild]
-        [RequireOutputGuild]
+        [RequireDmOrOutputGuild]
         public async Task Ban(
             CommandContext context,
             [Description("ID of user to ban")] ulong memberId,
@@ -81,7 +81,7 @@ namespace Bot600.Commands
         [Description("Ban a member and send them an appeal message via DMs, including your username for contact.")]
         [RequirePermissionInGuild(Permissions.BanMembers)]
         [RequireModeratorRoleInGuild]
-        [RequireOutputGuild]
+        [RequireDmOrOutputGuild]
         public async Task Ban(CommandContext context, DiscordMember member, [RemainingText] string? reason = null) =>
             await BanMember(context, member, reason);
 
@@ -90,7 +90,7 @@ namespace Bot600.Commands
         [Description("Ban a member and send them an appeal message via DMs with a default username for contact.")]
         [RequirePermissionInGuild(Permissions.BanMembers)]
         [RequireModeratorRoleInGuild]
-        [RequireOutputGuild]
+        [RequireDmOrOutputGuild]
         public async Task BanAnon(
             CommandContext context,
             [Description("ID of user to ban")] ulong memberId,
@@ -104,7 +104,7 @@ namespace Bot600.Commands
         [Description("Ban a member and send them an appeal message via DMs with a default username for contact.")]
         [RequirePermissionInGuild(Permissions.BanMembers)]
         [RequireModeratorRoleInGuild]
-        [RequireOutputGuild]
+        [RequireDmOrOutputGuild]
         public async Task BanAnon(
             CommandContext context,
             DiscordMember member,
