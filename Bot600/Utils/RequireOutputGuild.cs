@@ -1,9 +1,11 @@
+using System;
 using System.Threading.Tasks;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 
 namespace Bot600.Utils
 {
+    [AttributeUsage(AttributeTargets.Method)]
     public class RequireOutputGuild : CheckBaseAttribute
     {
         public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)

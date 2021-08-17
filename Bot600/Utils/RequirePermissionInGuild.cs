@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using DisCatSharp;
 using DisCatSharp.CommandsNext;
@@ -6,6 +7,7 @@ using DisCatSharp.Entities;
 
 namespace Bot600.Utils
 {
+    [AttributeUsage(AttributeTargets.Method)]
     public class RequirePermissionInGuild : CheckBaseAttribute
     {
         private readonly Permissions permissions;

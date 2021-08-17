@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using DisCatSharp.CommandsNext;
@@ -6,6 +7,7 @@ using DisCatSharp.Entities;
 
 namespace Bot600.Utils
 {
+    [AttributeUsage(AttributeTargets.Method)]
     public class RequireModeratorRoleInGuild : CheckBaseAttribute
     {
         public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
