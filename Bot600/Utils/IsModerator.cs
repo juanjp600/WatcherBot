@@ -1,8 +1,4 @@
 namespace Bot600.Utils
 {
-    public enum IsModerator
-    {
-        Yes,
-        No
-    }
+    public enum IsModerator { Yes, No }
 }

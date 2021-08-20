@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 
-namespace Bot600
+namespace Bot600.Config
 {
     public record BanTemplate(string Template, string DefaultAppeal)
     {

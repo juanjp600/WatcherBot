@@ -8,10 +8,12 @@ namespace Bot600.Utils
     {
         public static void CopyFields<TSuper, TSub>(this TSub subclass, TSuper superclass) where TSub : TSuper
         {
-            IEnumerable<FieldInfo?> x =
-                typeof(TSuper)
-                    .FindMembers(MemberTypes.Field, BindingFlags.Public | BindingFlags.Instance, null, null)
-                    .Select(mi => mi as FieldInfo);
+            IEnumerable<FieldInfo?> x = typeof(TSuper)
+                                        .FindMembers(MemberTypes.Field,
+                                                     BindingFlags.Public | BindingFlags.Instance,
+                                                     null,
+                                                     null)
+                                        .Select(mi => mi as FieldInfo);
 
             foreach (FieldInfo? fi in x)
             {

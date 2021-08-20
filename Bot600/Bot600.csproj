@@ -1,42 +1,43 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
-    <RuntimeIdentifiers>win-x64;win-x64;linux-x64;linux-arm</RuntimeIdentifiers>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net5.0</TargetFramework>
+        <RuntimeIdentifiers>win-x64;win-x64;linux-x64;linux-arm</RuntimeIdentifiers>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="2.2.0" />
-    <PackageReference Include="Discord.Net.Commands" Version="2.2.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.7" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.7">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.7" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="Octokit" Version="0.50.0" />
-    <PackageReference Include="System.Configuration.Abstractions" Version="2.0.2.45" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="DisCatSharp" Version="9.6.2" />
+        <PackageReference Include="DisCatSharp.CommandsNext" Version="9.6.2" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.7" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.7">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.7" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="Octokit" Version="0.50.0" />
+        <PackageReference Include="System.Configuration.Abstractions" Version="2.0.2.45" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Bot600.FSharp\Bot600.FSharp.fsproj" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Bot600.FSharp\Bot600.FSharp.fsproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <Folder Include="Migrations" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Migrations" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Remove="appsettings.json" />
+        <Content Include="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
 
 </Project>

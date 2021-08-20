@@ -1,8 +1,4 @@
 namespace Bot600.Utils
 {
-    public enum IsCringe
-    {
-        Yes,
-        No
-    }
+    public enum IsCringe { Yes, No }
 }

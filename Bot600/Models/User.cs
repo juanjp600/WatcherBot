@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using Bot600.Utils;
 
@@ -9,8 +8,8 @@ namespace Bot600.Models
     {
         public User(ulong userId, uint totalMessages = 0, uint cringeMessages = 0)
         {
-            UserId = userId;
-            TotalMessages = totalMessages;
+            UserId         = userId;
+            TotalMessages  = totalMessages;
             CringeMessages = cringeMessages;
         }
 
@@ -37,7 +36,8 @@ namespace Bot600.Models
         /// </summary>
         public uint CringeMessages { get; private set; }
 
-        public IsCringe IsCringe => TotalMessages > 3 && (double) CringeMessages / TotalMessages > 0.5 ? IsCringe.Yes : IsCringe.No;
+        public IsCringe IsCringe =>
+            TotalMessages > 3 && (double)CringeMessages / TotalMessages > 0.5 ? IsCringe.Yes : IsCringe.No;
 
         public static User GetOrCreateUser(WatcherDatabaseContext db, ulong userId)
         {

@@ -1,19 +1,69 @@
 using System;
 using System.Threading.Tasks;
-using Discord;
+using DisCatSharp.CommandsNext;
+using DisCatSharp.Entities;
 
 namespace Bot600.Utils
 {
     public static class BarotraumaToolBox
     {
-        internal static async Task InternalLog(LogMessage msg)
+        private static async Task<DiscordDmChannel?> GetDmChannelAsync(this CommandContext context)
         {
-            await Task.Yield();
-
-            Console.WriteLine($"[{msg.Severity}] {msg.Source}: {msg.Message}");
-            if (msg.Exception is not null)
+            if (context.Channel is DiscordDmChannel dmChannel)
             {
-                Console.WriteLine($"Exception: {msg.Exception.Message} {msg.Exception.StackTrace}");
+                return dmChannel;
+            }
+
+            if (context.Member is not null)
+            {
+                return await context.Member.CreateDmChannelAsync();
+            }
+
+            return null;
+        }
+
+        public static async Task RespondDmAsync(this CommandContext context, Action<DiscordMessageBuilder> action)
+        {
+            DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
+            if (dmChannel is not null)
+            {
+                await dmChannel.SendMessageAsync(action);
+            }
+        }
+
+        public static async Task RespondDmAsync(this CommandContext context, DiscordEmbed embed)
+        {
+            DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
+            if (dmChannel is not null)
+            {
+                await dmChannel.SendMessageAsync(embed);
+            }
+        }
+
+        public static async Task RespondDmAsync(this CommandContext context, DiscordMessageBuilder builder)
+        {
+            DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
+            if (dmChannel is not null)
+            {
+                await dmChannel.SendMessageAsync(builder);
+            }
+        }
+
+        public static async Task RespondDmAsync(this CommandContext context, string content)
+        {
+            DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
+            if (dmChannel is not null)
+            {
+                await dmChannel.SendMessageAsync(content);
+            }
+        }
+
+        public static async Task RespondDmAsync(this CommandContext context, string content, DiscordEmbed embed)
+        {
+            DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
+            if (dmChannel is not null)
+            {
+                await dmChannel.SendMessageAsync(content, embed);
             }
         }
 
@@ -36,14 +86,8 @@ namespace Bot600.Utils
             return count;
         }
 
-        public static bool ToBool(this IsCringe cringe)
-        {
-            return cringe == IsCringe.Yes;
-        }
+        public static bool ToBool(this IsCringe cringe) => cringe == IsCringe.Yes;
 
-        public static IsCringe ToCringe(this bool @bool)
-        {
-            return @bool ? IsCringe.Yes : IsCringe.No;
-        }
+        public static IsCringe ToCringe(this bool @bool) => @bool ? IsCringe.Yes : IsCringe.No;
     }
 }

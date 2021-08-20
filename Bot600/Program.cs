@@ -1,12 +1,11 @@
-﻿using System.Threading.Tasks;
-
-namespace Bot600
+﻿namespace Bot600
 {
     internal static class Program
     {
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
-            await new BotMain().MainAsync();
+            using var bm = new BotMain();
+            bm.MainAsync().GetAwaiter().GetResult();
         }
     }
 }
