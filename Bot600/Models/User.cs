@@ -37,7 +37,7 @@ namespace Bot600.Models
         public uint CringeMessages { get; private set; }
 
         public IsCringe IsCringe =>
-            TotalMessages > 3 && (double)CringeMessages / TotalMessages > 0.5 ? IsCringe.Yes : IsCringe.No;
+            TotalMessages > 10 && (double)CringeMessages / TotalMessages > 0.75 ? IsCringe.Yes : IsCringe.No;
 
         public static User GetOrCreateUser(WatcherDatabaseContext db, ulong userId)
         {

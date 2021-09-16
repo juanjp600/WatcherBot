@@ -14,6 +14,12 @@ namespace Bot600.Utils
         private readonly BotMain botMain;
         private readonly WatcherDatabaseContext databaseContext;
 
+        private enum Delete
+        {
+            No,
+            Yes
+        }
+
         public MessageDeleters(BotMain botMain)
         {
             this.botMain    = botMain;
@@ -30,29 +36,31 @@ namespace Bot600.Utils
 
         public Task ContainsDisallowedInvite(DiscordClient sender, MessageCreateEventArgs args)
         {
-            bool Condition()
+            Delete DeletionCondition()
             {
                 if (botMain.Config.InvitesAllowedOnChannels.Contains(args.Message.Channel.Id))
                 {
-                    return false;
+                    return Delete.No;
                 }
 
                 if (args.Guild is null || botMain.Config.InvitesAllowedOnServers.Contains(args.Guild.Id))
                 {
-                    return false;
+                    return Delete.No;
                 }
 
                 string[] invites = { "discord.gg/", "discord.com/invite", "discordapp.com/invite" };
-                return invites.Any(i => args.Message.Content.Contains(i, StringComparison.OrdinalIgnoreCase));
+                return invites.Any(i => args.Message.Content.Contains(i, StringComparison.OrdinalIgnoreCase)) ? Delete.Yes : Delete.No;
             }
 
-            return GeneralCondition(args.Message) && Condition() ? DeleteMsg(args.Message) : Task.CompletedTask;
+            return GeneralCondition(args.Message) && DeletionCondition() == Delete.Yes ? DeleteMsg(args.Message) : Task.CompletedTask;
         }
 
         public Task MessageWithinAttachmentLimits(DiscordClient sender, MessageCreateEventArgs args)
         {
-            bool Condition()
+            Delete DeletionCondition()
             {
+                if (!botMain.Config.AttachmentLimits.ContainsKey(args.Channel.Id)) { return Delete.No; }
+
                 bool insecureLink = args.Message.Content.Contains("http://", StringComparison.OrdinalIgnoreCase);
                 int numberWellSizedAttachments = args.Message.Attachments.Count(a => a.Width is null
                     || a.Height is null
@@ -60,13 +68,13 @@ namespace Bot600.Utils
                 int numberLinks = args.Message.Content.CountSubstrings("https://");
                 int sum = numberWellSizedAttachments + numberLinks;
 
-                return botMain.Config.AttachmentLimits.ContainsKey(args.Channel.Id)
-                       && botMain.Config.AttachmentLimits[args.Channel.Id].Contains(sum)
-                       && sum == args.Message.Attachments.Count
-                       && !insecureLink;
+                bool attachmentCountWithinLimits = botMain.Config.AttachmentLimits[args.Channel.Id].Contains(sum);
+                bool allAttachmentsWellSized = numberWellSizedAttachments == args.Message.Attachments.Count;
+
+                return (attachmentCountWithinLimits && allAttachmentsWellSized && !insecureLink) ? Delete.No : Delete.Yes;
             }
 
-            return GeneralCondition(args.Message) && Condition() ? DeleteMsg(args.Message) : Task.CompletedTask;
+            return GeneralCondition(args.Message) && DeletionCondition() == Delete.Yes ? DeleteMsg(args.Message) : Task.CompletedTask;
         }
 
         public Task ProhibitFormattingFromUsers(DiscordClient sender, MessageCreateEventArgs args) =>

@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.IO;
 using System.Reflection;
@@ -9,12 +10,16 @@ namespace Bot600.Models
     public class WatcherDatabaseContext : DbContext
     {
         private static readonly Lazy<string> ConnectionString =
-            new(() => new ConfigurationBuilder().AddJsonFile("appsettings.json")
-                                                .Build()
-                                                .GetConnectionString("WatcherDatabase")
-                                                .Replace("$WD",
-                                                         Path.GetDirectoryName(
-                                                             Assembly.GetExecutingAssembly().Location)));
+            new(() => {
+                var configBuilder = new ConfigurationBuilder();
+                var jsonFile = configBuilder.AddJsonFile("appsettings.json");
+                var build = jsonFile.Build();
+                var connString = build.GetConnectionString("WatcherDatabase");
+                var executingAssemblyLocation = Assembly.GetExecutingAssembly().Location;
+                return connString.Replace("$WD",
+                                        Path.GetDirectoryName(
+                                            executingAssemblyLocation));
+            });
 
 #pragma warning disable 8618
         // ReSharper disable once UnusedAutoPropertyAccessor.Global
