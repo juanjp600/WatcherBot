@@ -23,8 +23,8 @@ jobs:
         id: zip_binary
         run: |
           cd "./build_output"
-          tar cfJ Bot600.tar.xz *
-          echo "::set-output name=binary_path::$(readlink -f Bot600.tar.xz)"
+          tar cfJ WatcherBot.tar.xz *
+          echo "::set-output name=binary_path::$(readlink -f WatcherBot.tar.xz)"
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
@@ -40,5 +40,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ steps.zip_binary.outputs.binary_path }}
-          asset_name: Bot600.tar.xz
+          asset_name: WatcherBot.tar.xz
           asset_content_type: application/zip

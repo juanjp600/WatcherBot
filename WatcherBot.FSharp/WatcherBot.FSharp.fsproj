@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <RuntimeIdentifiers>win-x64;win-x64;linux-x64;linux-arm</RuntimeIdentifiers>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <RootNamespace>WatcherBot.FSharp</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="CommitMessage.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Octokit" Version="0.50.0" />
+    </ItemGroup>
+
+</Project>
