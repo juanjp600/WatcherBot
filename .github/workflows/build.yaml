@@ -17,6 +17,8 @@ jobs:
           dotnet-version: "5.0.x"
       - name: Install dependencies
         run: dotnet restore
+      - name: Create appsettings.json
+        run: cp WatcherBot/appsettings.example.json WatcherBot/appsettings.json
       - name: Build Linux
         run: dotnet publish --configuration Release --no-restore --self-contained --runtime linux-arm --output "./build_output"
       - name: Zip binary
