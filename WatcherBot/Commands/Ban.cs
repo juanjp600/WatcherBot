@@ -39,7 +39,7 @@ namespace WatcherBot.Commands
             }
             else
             {
-                bannerStr = banner.ToString();
+                bannerStr = $"{banner.Username}#{banner.Discriminator}";
                 bannerStr = bannerStr != BanTemplate.DefaultAppeal
                     ? $"`{bannerStr}` or `{BanTemplate.DefaultAppeal}`"
                     : $"`{bannerStr}`";
