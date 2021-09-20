@@ -19,18 +19,6 @@ namespace WatcherBot.Commands
         private const string Endpoint = "https://api.yeen.land";
         private static readonly HttpClient HttpClient = new();
 
-        [Command("roleicon")]
-        public async Task SetRoleIcon(CommandContext ctx, DiscordRole role)
-        {
-            var icon = ctx.Message.Attachments.First();
-            var wc = new WebClient();
-            var s = wc.OpenRead(new Uri(icon.Url));
-            var ms = new MemoryStream();
-            s.CopyTo(ms);
-            ms.Position = 0;
-            await role.ModifyAsync(g => g.Icon = ms);
-        }
-
         [Command("sus")]
         [Description("smh my head")]
         public async Task Sus(CommandContext context) =>
