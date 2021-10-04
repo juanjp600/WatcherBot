@@ -121,6 +121,11 @@ namespace WatcherBot.Utils
             return Task.CompletedTask;
         }
 
+        public Task ReplyInNoConversationChannel(DiscordClient sender, MessageCreateEventArgs args) =>
+            botMain.Config.AttachmentLimits.ContainsKey(args.Channel.Id) && args.Message.ReferencedMessage is not null
+                ? DeleteMsg(args.Message)
+                : Task.CompletedTask;
+
         private Task DeleteMsg(DiscordMessage msg)
         {
             async Task Delete(Task<IsModerator> t)
