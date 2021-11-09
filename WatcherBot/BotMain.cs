@@ -56,6 +56,7 @@ namespace WatcherBot
             Client.MessageCreated += deleters.DeleteCringeMessages;
             Client.MessageCreated += deleters.MessageWithinAttachmentLimits;
             Client.MessageCreated += deleters.ProhibitFormattingFromUsers;
+            Client.MessageCreated += deleters.DeletePotentialSpam;
 
             ServiceProvider services = new ServiceCollection().AddSingleton(this).BuildServiceProvider();
 
@@ -91,6 +92,34 @@ namespace WatcherBot
             return DiscordConfig.ModeratorRoles.Intersect(guildUser.Roles).Any() ? IsModerator.Yes : IsModerator.No;
         }
 
+        public async Task<DiscordMember> GetMemberFromUser(DiscordUser user)
+        {
+            DiscordGuild guild = DiscordConfig.OutputGuild;
+            return user is DiscordMember rgu ? rgu : await guild.GetMemberAsync(user.Id);
+        }
+
+        public async Task<IsExemptFromSpamFilter> IsUserExemptFromSpamFilter(DiscordUser user)
+        {
+            DiscordGuild guild = DiscordConfig.OutputGuild;
+            DiscordMember guildUser = user is DiscordMember rgu ? rgu : await guild.GetMemberAsync(user.Id);
+            return guildUser.Roles.Any(r => r.Id == Config.SpamFilterExemptionRole)
+                ? IsExemptFromSpamFilter.Yes
+                : IsExemptFromSpamFilter.No;
+        }
+
+        public async Task MuteUser(DiscordUser user, string reason)
+        {
+            DiscordGuild guild = DiscordConfig.OutputGuild;
+            DiscordMember guildUser = user is DiscordMember rgu ? rgu : await guild.GetMemberAsync(user.Id);
+            guildUser.ReplaceRolesAsync(guildUser.Roles.Concat(new[] { MutedRole }), reason);
+        }
+
+        public DiscordChannel SpamReportChannel
+            => DiscordConfig.OutputGuild.Channels[Config.SpamReportChannel];
+
+        public DiscordRole MutedRole
+            => DiscordConfig.OutputGuild.Roles[Config.MutedRole];
+        
         private Task HandleCommand(DiscordClient sender, MessageCreateEventArgs args)
         {
             if (!Config.ProhibitCommandsFromUsers.Contains(args.Author.Id))

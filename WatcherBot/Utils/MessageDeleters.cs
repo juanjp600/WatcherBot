@@ -1,10 +1,12 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using DisCatSharp;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using WatcherBot.Models;
 
 namespace WatcherBot.Utils
@@ -118,6 +120,58 @@ namespace WatcherBot.Utils
                     await DeleteMsg(args.Message);
                 }
             });
+            return Task.CompletedTask;
+        }
+
+        public Task DeletePotentialSpam(DiscordClient sender, MessageCreateEventArgs args)
+        {
+            Task _ = Task.Run(async () =>
+            {
+                if (botMain.DiscordConfig.OutputGuild.Id != args.Guild.Id) { return; }
+                if (args.Author.IsBot) { return; }
+                if (await botMain.IsUserModerator(args.Author) == IsModerator.Yes) { return; }
+                if (await botMain.IsUserExemptFromSpamFilter(args.Author) == IsExemptFromSpamFilter.Yes) { return; }
+                
+                string messageContent = args.Message.Content.ToLowerInvariant();
+                string messageContentToTest = string.Join("", messageContent.Where(c => !char.IsWhiteSpace(c)));
+                foreach (var safeSubstr in botMain.Config.KnownSafeSubstrings)
+                {
+                    messageContentToTest = messageContentToTest.Replace(safeSubstr, "");
+                }
+                
+                if (messageContentToTest.CountSubstrings("https://") + messageContentToTest.CountSubstrings("http://") <= 0) { return; }
+
+                string[] messageContentSplit = messageContentToTest.Split(' ', '\n', '\t', '\r');
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                var hits
+                    = botMain.Config.SpamSubstrings
+                        .Select(s => LevenshteinDistance.FindSubstr(messageContentToTest, s.Substring, s.MaxDistance))
+                        .Where(r => r is not null)
+                        .Cast<(int Index, int Length, int Distance)>()
+                        .ToArray();
+                sw.Stop();
+
+                if (hits.Length >= 2)
+                {
+                    var reportChannel = botMain.SpamReportChannel;
+                    var member = await botMain.GetMemberFromUser(args.Author);
+                    var dmChannel = await member.CreateDmChannelAsync();
+                    var dm = await dmChannel.SendMessageAsync(
+                        $"You have been automatically muted on the Undertow Games server for sending the following message in {args.Channel.Mention}:\n\n"
+                        + $"> ``` {messageContent} ```\n\n"
+                        + $"This is a spam prevention measure. If this was a false positive, please contact a moderator or administrator.");
+                    reportChannel.SendMessageAsync(
+                        $"{args.Author.Mention} has been muted for sending the following message in {args.Channel.Mention}:\n\n"
+                        + $"> ``` {messageContent} ```\n\n"
+                        + $"*Hits*: {string.Join(", ", hits.Select(h => $"`{messageContentToTest.Substring(h.Index, h.Length)}`"))}\n\n"
+                        + $"If this was a false positive, you may revert this by removing the `Muted` role and granting the `Spam filter exemption` role.\n\n"
+                        + (dm != null ? "The user has been informed via DM." : "The user **could not** be informed via DM."));
+                    botMain.MuteUser(args.Author, $"Potential spam {DateTime.UtcNow}");
+                    args.Message.DeleteAsync();
+                }
+            });
+
             return Task.CompletedTask;
         }
 
