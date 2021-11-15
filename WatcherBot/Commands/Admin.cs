@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using DisCatSharp;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
@@ -26,8 +27,8 @@ namespace WatcherBot.Commands
                                  .WithTimestamp(DateTimeOffset.Now)
                                  .WithFooter($"ID: {member.Id}")
                                  .WithDescription(member.Mention)
-                                 .AddField("Joined", $"<t:{member.JoinedAt.ToUnixTimeSeconds()}:F>", inline: true)
-                                 .AddField("Created", $"<t:{member.CreationTimestamp.ToUnixTimeSeconds()}:F>", inline: true)
+                                 .AddField("Joined", Formatter.Timestamp(member.JoinedAt, TimestampFormat.ShortDateTime), inline: true)
+                                 .AddField("Created", Formatter.Timestamp(member.CreationTimestamp, TimestampFormat.ShortDateTime), inline: true)
                                  .AddField($"Roles ({member.Roles.Count()})",
                                            string.Join(", ", member.Roles.Select(r => r.Name)))
                                  .Build();
@@ -48,6 +49,7 @@ namespace WatcherBot.Commands
                                  .WithTimestamp(DateTimeOffset.Now)
                                  .WithFooter(user.Id.ToString())
                                  .WithDescription($"{user.Mention}\nNot in server")
+                                 .AddField("Created", Formatter.Timestamp(user.CreationTimestamp, TimestampFormat.ShortDateTime), inline: true)
                                  .Build();
             await context.RespondAsync(embed);
         }
