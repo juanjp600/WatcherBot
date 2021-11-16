@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
@@ -48,7 +49,7 @@ namespace WatcherBot.Config
         public readonly ImmutableHashSet<ulong> ProhibitFormattingFromUsers;
         // @formatter:on
 
-        public readonly ImmutableHashSet<(string Substring, int MaxDistance)> SpamSubstrings;
+        public readonly ImmutableHashSet<(string Substring, int MaxDistance, float Weight)> SpamSubstrings;
         public readonly ImmutableHashSet<string> KnownSafeSubstrings;
         public readonly ulong SpamReportChannel;
         public readonly ulong SpamFilterExemptionRole;
@@ -86,8 +87,12 @@ namespace WatcherBot.Config
             //Spam detection
             var spamSubstrs = Configuration.GetSection("SpamSubstrings").Get<string[]>() ?? Enumerable.Empty<string>();
             var spamSubstrMaxDist = Configuration.GetSection("SpamSubstringMaxDist").Get<int[]>() ?? Enumerable.Empty<int>();
-            SpamSubstrings = spamSubstrs.Zip(spamSubstrMaxDist, (s, d) => (s, d))
+            var spamSubstrWeights = Configuration.GetSection("SpamSubstringWeights").Get<float[]>() ?? Enumerable.Empty<float>();
+            SpamSubstrings = spamSubstrs
+                .Zip(spamSubstrMaxDist, (s, d) => (s, d))
+                .Zip(spamSubstrWeights, (sd, w) => (sd.s, sd.d, w))
                 .ToImmutableHashSet();
+            Console.WriteLine(string.Join(", ", SpamSubstrings));
             KnownSafeSubstrings = (Configuration.GetSection("KnownSafeSubstrings").Get<string[]>() ?? Enumerable.Empty<string>())
                 .ToImmutableHashSet();
             SpamReportChannel = Configuration.GetSection("SpamReportChannel").Get<ulong>();

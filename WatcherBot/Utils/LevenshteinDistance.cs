@@ -13,12 +13,13 @@ namespace WatcherBot.Utils
         {
             int n = s.Length;
             int m = t.Length;
+
+            if (n == 0 || m == 0) { return Math.Max(n, m); }
+
             Span<int> d = stackalloc int[(n+1) * (m+1)];
 
             int calcIndex(int x, int y)
                 => y * (n + 1) + x;
-
-            if (n == 0 || m == 0) { return 0; }
 
             for (int i = 0; i <= n; i++) { d[calcIndex(i, 0)] = i; }
             for (int j = 0; j <= m; j++) { d[calcIndex(0, j)] = j; }
