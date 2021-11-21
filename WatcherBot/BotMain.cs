@@ -39,7 +39,6 @@ namespace WatcherBot
 
             Log.Logger.Information("Starting bot");
             shutdownRequest = new CancellationTokenSource();
-            MessageDeleters deleters = new(this);
 
             //GitHub API
             GitHubClient = new GitHubClient(new ProductHeaderValue("WatcherBot"));
@@ -57,9 +56,10 @@ namespace WatcherBot
                 LoggerFactory = new LoggerFactory().AddSerilog(Log.Logger),
             };
             Client = new DiscordClient(config);
-
+            
             discordConfig         =  new Lazy<DiscordConfig>(() => new DiscordConfig(Config, Client));
             Client.MessageCreated += HandleCommand;
+            MessageDeleters deleters = new(this);
             Client.MessageCreated += deleters.ContainsDisallowedInvite;
             Client.MessageCreated += deleters.DeleteCringeMessages;
             Client.MessageCreated += deleters.MessageWithinAttachmentLimits;
