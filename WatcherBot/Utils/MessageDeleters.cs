@@ -50,6 +50,12 @@ namespace WatcherBot.Utils
                            ? Delete.Yes
                            : Delete.No;
             }
+            
+            if (!GeneralCondition(args.Message) || DeletionCondition() != Delete.Yes)
+            {
+                return Task.CompletedTask;
+            }
+
 
             logger.LogInformation("Deleting message sent by {User} for reason {Reason}",
                                   args.Message.Author.UsernameWithDiscriminator, DeletionReason.DisallowedInvite);
