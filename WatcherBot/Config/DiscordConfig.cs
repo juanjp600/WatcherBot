@@ -17,9 +17,9 @@ namespace WatcherBot.Config
             OutputGuild = outputGuild;
             ModeratorRoles =
                 (from id in config.Configuration.GetSection("ModeratorRoles").Get<ulong[]>()
-                    let role = outputGuild.Roles[id]
-                    where role is not null
-                    select role).ToImmutableHashSet();
+                 let role = outputGuild.Roles[id]
+                 where role is not null
+                 select role).ToImmutableHashSet();
         }
     }
 }

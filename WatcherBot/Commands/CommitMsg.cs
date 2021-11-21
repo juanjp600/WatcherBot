@@ -15,7 +15,10 @@ namespace WatcherBot.Commands
     {
         private readonly BotMain botMain;
 
-        public CommitCommandModule(BotMain bm) => botMain = bm;
+        public CommitCommandModule(BotMain bm)
+        {
+            botMain = bm;
+        }
 
         [Command("commitmsg")]
         [Aliases("c", "commit")]
@@ -64,7 +67,7 @@ namespace WatcherBot.Commands
         public async Task Issue(CommandContext context)
         {
             await context.RespondAsync(
-                "You can open an issue for that!\n<https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md>");
+                                       "You can open an issue for that!\n<https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md>");
         }
 
         [Command("issue")]

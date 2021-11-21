@@ -1863,28 +1863,46 @@ namespace Barotrauma
             new uint[]{0x2a392,0x2f88f},
             new uint[]{0x2a600,0x2fa1d},
         }.Select(a => a.ToImmutableHashSet()).ToImmutableHashSet();
-        
+
         private static readonly ImmutableDictionary<uint, ImmutableHashSet<uint>> charToHomoglyphGroup
             = homoglyphs.SelectMany(g
-                    => g.Select(c => new KeyValuePair<uint, ImmutableHashSet<uint>>(c, g)))
-                .ToImmutableDictionary();
+                                        => g.Select(c => new KeyValuePair<uint, ImmutableHashSet<uint>>(c, g)))
+                        .ToImmutableDictionary();
 
         public static bool Compare(string a, string b)
         {
-            if (a.Equals(b, StringComparison.InvariantCulture)) return true;
-            if (a.Length != b.Length) return false;
-            for (int i = 0; i < a.Length; i++)
+            if (a.Equals(b, StringComparison.InvariantCulture))
             {
-                if (!Compare(a[i], b[i])) { return false; }
+                return true;
             }
+
+            if (a.Length != b.Length)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < a.Length; i++)
+            {
+                if (!Compare(a[i], b[i]))
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 
         public static bool Compare(char a, char b)
         {
-            if (a == b) { return true; }
+            if (a == b)
+            {
+                return true;
+            }
 
-            if (!charToHomoglyphGroup.TryGetValue(a, out var g1)) { return false; }
+            if (!charToHomoglyphGroup.TryGetValue(a, out var g1))
+            {
+                return false;
+            }
 
             return g1.Contains(b);
         }

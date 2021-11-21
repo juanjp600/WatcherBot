@@ -24,9 +24,9 @@ namespace WatcherBot.Commands
 
         private async Task BanMember(
             CommandContext context,
-            DiscordMember member,
-            string? reason,
-            Anonymous anon = Anonymous.No)
+            DiscordMember  member,
+            string?        reason,
+            Anonymous      anon = Anonymous.No)
         {
             DiscordUser banner = context.User;
             // The commands that invoke BanMember should not be executed if the caller is not a moderator
@@ -99,29 +99,14 @@ namespace WatcherBot.Commands
         public async Task Ban(CommandContext context, DiscordMember member, [RemainingText] string? reason = null) =>
             await BanMember(context, member, reason);
 
-
         [Command("ban_anon")]
         [Description("Ban a member and send them an appeal message via DMs with a default username for contact.")]
         [RequirePermissionInGuild(Permissions.BanMembers)]
         [RequireModeratorRoleInGuild]
         [RequireDmOrOutputGuild]
         public async Task BanAnon(
-            CommandContext context,
-            [Description("ID of user to ban")] ulong memberId,
-            [RemainingText] string? reason = null) =>
-            await BanMember(context,
-                            await botMain.DiscordConfig.OutputGuild.GetMemberAsync(memberId),
-                            reason,
-                            Anonymous.Yes);
-
-        [Command("ban_anon")]
-        [Description("Ban a member and send them an appeal message via DMs with a default username for contact.")]
-        [RequirePermissionInGuild(Permissions.BanMembers)]
-        [RequireModeratorRoleInGuild]
-        [RequireDmOrOutputGuild]
-        public async Task BanAnon(
-            CommandContext context,
-            DiscordMember member,
+            CommandContext          context,
+            DiscordMember           member,
             [RemainingText] string? reason = null) =>
             await BanMember(context, member, reason, Anonymous.Yes);
     }

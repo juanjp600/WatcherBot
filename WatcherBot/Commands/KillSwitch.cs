@@ -13,7 +13,10 @@ namespace WatcherBot.Commands
     {
         private readonly BotMain botMain;
 
-        public KillSwitchModule(BotMain bm) => botMain = bm;
+        public KillSwitchModule(BotMain bm)
+        {
+            botMain = bm;
+        }
 
         [Command("killswitch")]
         [Aliases("kill")]

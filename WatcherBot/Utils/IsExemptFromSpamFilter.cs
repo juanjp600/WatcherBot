@@ -1,4 +1,8 @@
 namespace WatcherBot.Utils
 {
-    public enum IsExemptFromSpamFilter { No, Yes }
+    public enum IsExemptFromSpamFilter
+    {
+        No,
+        Yes,
+    }
 }

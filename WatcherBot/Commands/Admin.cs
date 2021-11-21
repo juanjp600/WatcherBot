@@ -17,7 +17,7 @@ namespace WatcherBot.Commands
         [RequireModeratorRoleInGuild]
         [RequireDmOrOutputGuild]
         public async Task WhoIs(
-            CommandContext context,
+            CommandContext                                       context,
             [Description("The member to look up")] DiscordMember member)
         {
             DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
@@ -46,20 +46,21 @@ namespace WatcherBot.Commands
         [RequireModeratorRoleInGuild]
         [RequireDmOrOutputGuild]
         public async Task WhoIs(
-            CommandContext context,
+            CommandContext                                   context,
             [Description("The user to look up")] DiscordUser user)
         {
-            DiscordEmbed embed = new DiscordEmbedBuilder()
-                                 .WithAuthor(user.UsernameWithDiscriminator, iconUrl: user.AvatarUrl)
-                                 .WithThumbnail(user.AvatarUrl)
-                                 .WithTimestamp(DateTimeOffset.Now)
-                                 .WithFooter(user.Id.ToString())
-                                 .WithDescription($"{user.Mention}\nNot in server")
-                                 .AddField("Created",
-                                           Formatter.Timestamp(user.CreationTimestamp, TimestampFormat.ShortDateTime),
-                                           true)
-                                 .Build();
-            await context.RespondAsync(embed);
+            DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
+                                        .WithAuthor(user.UsernameWithDiscriminator, iconUrl: user.AvatarUrl)
+                                        .WithThumbnail(user.AvatarUrl)
+                                        .WithTimestamp(DateTimeOffset.Now)
+                                        .WithFooter(user.Id.ToString())
+                                        .WithDescription($"{user.Mention}\nNot in server")
+                                        .AddField("Created",
+                                                  Formatter.Timestamp(user.CreationTimestamp,
+                                                                      TimestampFormat.ShortDateTime),
+                                                  true);
+
+            await context.RespondAsync(embed.Build());
         }
     }
 }

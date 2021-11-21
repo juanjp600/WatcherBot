@@ -12,7 +12,10 @@ namespace WatcherBot.Utils
     {
         private readonly Permissions permissions;
 
-        public RequirePermissionInGuild(Permissions permissions) => this.permissions = permissions;
+        public RequirePermissionInGuild(Permissions permissions)
+        {
+            this.permissions = permissions;
+        }
 
         public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
         {

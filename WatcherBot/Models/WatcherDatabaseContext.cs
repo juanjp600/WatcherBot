@@ -10,16 +10,17 @@ namespace WatcherBot.Models
     public class WatcherDatabaseContext : DbContext
     {
         private static readonly Lazy<string> ConnectionString =
-            new(() => {
-                var configBuilder = new ConfigurationBuilder();
-                var jsonFile = configBuilder.AddJsonFile("appsettings.json");
-                var build = jsonFile.Build();
-                var connString = build.GetConnectionString("WatcherDatabase");
-                var executingAssemblyLocation = Assembly.GetExecutingAssembly().Location;
-                return connString.Replace("$WD",
-                                        Path.GetDirectoryName(
-                                            executingAssemblyLocation));
-            });
+            new(() =>
+                {
+                    var                    configBuilder             = new ConfigurationBuilder();
+                    IConfigurationBuilder? jsonFile                  = configBuilder.AddJsonFile("appsettings.json");
+                    IConfigurationRoot?    build                     = jsonFile.Build();
+                    string?                connString                = build.GetConnectionString("WatcherDatabase");
+                    string?                executingAssemblyLocation = Assembly.GetExecutingAssembly().Location;
+                    return connString.Replace("$WD",
+                                              Path.GetDirectoryName(
+                                                                    executingAssemblyLocation));
+                });
 
 #pragma warning disable 8618
         // ReSharper disable once UnusedAutoPropertyAccessor.Global
