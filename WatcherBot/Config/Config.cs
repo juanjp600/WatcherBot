@@ -1,8 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
-using WatcherBot.Utils;
+using Range = WatcherBot.Utils.Range;
 
 namespace WatcherBot.Config
 {
@@ -32,7 +33,7 @@ namespace WatcherBot.Config
         public readonly ulong SpamFilterExemptionRole;
         public readonly ulong SpamReportChannel;
 
-        public readonly ImmutableHashSet<(string Substring, int MaxDistance)> SpamSubstrings;
+        public readonly ImmutableHashSet<(string Substring, int MaxDistance, float Weight)> SpamSubstrings;
 
         public Config(IConfigurationBuilder builder)
         {
@@ -65,11 +66,16 @@ namespace WatcherBot.Config
 
             //Spam detection
             IEnumerable<string> spamSubstrs = Configuration.GetSection("SpamSubstrings").Get<string[]>()
-                                               ?? Enumerable.Empty<string>();
+                                              ?? Enumerable.Empty<string>();
             IEnumerable<int> spamSubstrMaxDist =
                 Configuration.GetSection("SpamSubstringMaxDist").Get<int[]>() ?? Enumerable.Empty<int>();
-            SpamSubstrings = spamSubstrs.Zip(spamSubstrMaxDist, (s, d) => (s, d))
-                                        .ToImmutableHashSet();
+            IEnumerable<float> spamSubstrWeights =
+                Configuration.GetSection("SpamSubstringWeights").Get<float[]>() ?? Enumerable.Empty<float>();
+            SpamSubstrings = spamSubstrs
+                             .Zip(spamSubstrMaxDist, (s,  d) => (s, d))
+                             .Zip(spamSubstrWeights, (sd, w) => (sd.s, sd.d, w))
+                             .ToImmutableHashSet();
+            Console.WriteLine(string.Join(", ", SpamSubstrings));
             KnownSafeSubstrings = (Configuration.GetSection("KnownSafeSubstrings").Get<string[]>()
                                    ?? Enumerable.Empty<string>())
                 .ToImmutableHashSet();
@@ -79,6 +85,6 @@ namespace WatcherBot.Config
         }
 
         public static Config DefaultConfig() =>
-            new(new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: false, reloadOnChange: false));
+            new(new ConfigurationBuilder().AddJsonFile("appsettings.json", false, false));
     }
 }

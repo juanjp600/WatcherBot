@@ -12,17 +12,18 @@ namespace WatcherBot.Utils
         /// </summary>
         public static int Calculate(ReadOnlySpan<char> s, ReadOnlySpan<char> t)
         {
-            int       n = s.Length;
-            int       m = t.Length;
+            int n = s.Length;
+            int m = t.Length;
+
+            if (n == 0 || m == 0)
+            {
+                return Math.Max(n, m);
+            }
+
             Span<int> d = stackalloc int[(n + 1) * (m + 1)];
 
             int calcIndex(int x, int y)
                 => y * (n + 1) + x;
-
-            if (n == 0 || m == 0)
-            {
-                return 0;
-            }
 
             for (var i = 0; i <= n; i++)
             {
