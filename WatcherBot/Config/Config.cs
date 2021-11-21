@@ -74,6 +74,6 @@ namespace WatcherBot.Config
         }
 
         public static Config DefaultConfig() =>
-            new(new ConfigurationBuilder().AddJsonFile("appsettings.json", false, false));
+            new(new ConfigurationBuilder().AddJsonFile("appsettings.json", optional: false, reloadOnChange: false));
     }
 }
