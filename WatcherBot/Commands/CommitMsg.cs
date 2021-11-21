@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
+using Microsoft.Extensions.Logging;
 using Octokit;
 using static WatcherBot.FSharp.CommitMessage;
 using FileMode = System.IO.FileMode;
@@ -26,23 +27,33 @@ namespace WatcherBot.Commands
         {
             using (context.Channel.TriggerTypingAsync())
             {
+                context.Client.Logger.LogDebug("Fetching messages...");
                 string content = await GetCommitMessages(botMain.GitHubClient, hashes);
+                context.Client.Logger.LogDebug("Got responses");
                 if (content.Length <= 2000)
                 {
+                    context.Client.Logger.LogDebug("Sending message...");
                     await context.RespondAsync(content);
+                    context.Client.Logger.LogDebug("Sent");
                 }
                 else
                 {
+                    context.Client.Logger.LogDebug("Output too long for a message; creating files");
                     // Create a temporary directory
                     string directory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                     Directory.CreateDirectory(directory);
                     // Save the string to a file there
                     string filepath = Path.Combine(directory, "commits.md");
+                    context.Client.Logger.LogDebug("Temp filepath: {Filepath}", filepath);
                     await File.WriteAllTextAsync(filepath, content);
                     // Send the file to Discord
+                    context.Client.Logger.LogDebug("Sending file...");
                     await context.RespondAsync(
-                        new DiscordMessageBuilder().WithFile(new FileStream(filepath, FileMode.Open)));
+                                               new DiscordMessageBuilder().WithFile(new FileStream(filepath,
+                                                   FileMode.Open)));
+                    context.Client.Logger.LogDebug("Sent");
                     // Delete the temporary directory
+                    context.Client.Logger.LogDebug("Deleting {Filepath}", filepath);
                     Directory.Delete(directory, true);
                 }
             }

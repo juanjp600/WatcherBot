@@ -8,7 +8,9 @@ using DisCatSharp.CommandsNext;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Octokit;
+using Serilog;
 using WatcherBot.Config;
 using WatcherBot.Models;
 using WatcherBot.Utils;
@@ -30,7 +32,12 @@ namespace WatcherBot
 
         public BotMain()
         {
-            Config          = WatcherBot.Config.Config.DefaultConfig();
+            Config = WatcherBot.Config.Config.DefaultConfig();
+            Log.Logger = new LoggerConfiguration()
+                         .ReadFrom.Configuration(Config.Configuration)
+                         .CreateLogger();
+
+            Log.Logger.Information("Starting bot");
             shutdownRequest = new CancellationTokenSource();
             MessageDeleters deleters = new(this);
 
@@ -47,6 +54,7 @@ namespace WatcherBot
                 TokenType     = TokenType.Bot,
                 Intents       = DiscordIntents.AllUnprivileged,
                 AutoReconnect = true,
+                LoggerFactory = new LoggerFactory().AddSerilog(Log.Logger),
             };
             Client = new DiscordClient(config);
 
@@ -69,6 +77,8 @@ namespace WatcherBot
                 UseDefaultCommandHandler = false,
             };
             CommandsNextExtension commands = Client.UseCommandsNext(commandsConfig);
+            commands.CommandExecuted += Logging.Logging.CommandExecuted;
+            commands.CommandErrored  += Logging.Logging.CommandErrored;
             commands.RegisterCommands(Assembly.GetAssembly(typeof(BotMain)));
 
             // Database

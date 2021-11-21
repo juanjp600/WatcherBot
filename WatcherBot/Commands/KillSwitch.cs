@@ -3,6 +3,7 @@ using DisCatSharp;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
+using Microsoft.Extensions.Logging;
 using WatcherBot.Utils;
 
 namespace WatcherBot.Commands
@@ -28,6 +29,8 @@ namespace WatcherBot.Commands
                 return;
             }
 
+            context.Client.Logger.LogInformation("Calling {Command} to shut down (invoked by {Moderator})",
+                                                 context.Command.QualifiedName, context.User.UsernameWithDiscriminator);
             botMain.Kill();
         }
     }
