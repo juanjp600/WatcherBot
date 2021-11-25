@@ -1,14 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
+﻿using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
-using WatcherBot.Utils;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
-using DisCatSharp.Entities;
-using Newtonsoft.Json;
+using WatcherBot.Utils;
 
 namespace WatcherBot.Commands
 {
@@ -38,8 +33,8 @@ namespace WatcherBot.Commands
         [Description("fetch hyena images by id")]
         public async Task Hyena(CommandContext context, [Description("id of hyena photo to fetch")] ulong id)
         {
-            var requestUriString = $"{Endpoint}/id/{id}";
-            string reply = await GetReply(requestUriString);
+            var    requestUriString = $"{Endpoint}/id/{id}";
+            string reply            = await GetReply(requestUriString);
 
             await context.RespondAsync(reply);
         }
@@ -47,7 +42,7 @@ namespace WatcherBot.Commands
         private static async Task<HyenaUrl?> QueryApi(string requestUriString)
         {
             string response = await HttpClient.GetStringAsync(requestUriString);
-            var url = JsonConvert.DeserializeObject<HyenaUrl>(response);
+            var    url      = JsonSerializer.Deserialize<HyenaUrl>(response);
 
             return url;
         }

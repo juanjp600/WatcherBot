@@ -23,7 +23,7 @@ let ParseHash (str: string) : Result<string, string> =
             | false -> None
 
     match str with
-    | HashMatch hash -> hash |> fun g -> g.Value |> Ok
+    | HashMatch hash -> Ok hash.Value
     | _ -> Error "Error executing !commitmsg: argument is invalid"
 
 let DeDuplicate (arr: Result<string, string> []) : Result<string, string> [] =

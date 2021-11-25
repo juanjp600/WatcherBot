@@ -1,4 +1,8 @@
 namespace WatcherBot.Utils
 {
-    public enum IsCringe { Yes, No }
+    public enum IsCringe
+    {
+        No,
+        Yes,
+    }
 }
