@@ -30,6 +30,8 @@ namespace WatcherBot
 
         private readonly WatcherDatabaseContext watcherDatabaseContext;
 
+        private readonly DuplicateMessageFilter duplicateMessageFilter;
+
         public BotMain()
         {
             Config = WatcherBot.Config.Config.DefaultConfig();
@@ -56,7 +58,7 @@ namespace WatcherBot
                 LoggerFactory = new LoggerFactory().AddSerilog(Log.Logger),
             };
             Client = new DiscordClient(config);
-            
+
             discordConfig         =  new Lazy<DiscordConfig>(() => new DiscordConfig(Config, Client));
             Client.MessageCreated += HandleCommand;
             MessageDeleters deleters = new(this);
@@ -65,6 +67,10 @@ namespace WatcherBot
             Client.MessageCreated += deleters.MessageWithinAttachmentLimits;
             Client.MessageCreated += deleters.ProhibitFormattingFromUsers;
             Client.MessageCreated += deleters.DeletePotentialSpam;
+
+            duplicateMessageFilter =  new DuplicateMessageFilter(this);
+            Client.MessageCreated  += duplicateMessageFilter.MessageCreated;
+            duplicateMessageFilter.Start();
 
             ServiceProvider services = new ServiceCollection().AddSingleton(this).BuildServiceProvider();
 
@@ -96,7 +102,10 @@ namespace WatcherBot
         public void Dispose()
         {
             Client.Dispose();
+            duplicateMessageFilter.Cancel();
+            duplicateMessageFilter.Dispose();
             watcherDatabaseContext.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         public void Kill() => shutdownRequest.Cancel();

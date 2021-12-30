@@ -58,7 +58,7 @@ namespace WatcherBot.Utils
 
 
             logger.LogInformation("Deleting message sent by {User} for reason {Reason}",
-                                  args.Message.Author.UsernameWithDiscriminator, DeletionReason.DisallowedInvite);
+                                  args.Message.Author.UsernameWithDiscriminator, MessageDeletionReason.DisallowedInvite);
             return DeleteMsg(args.Message);
         }
 
@@ -98,7 +98,7 @@ namespace WatcherBot.Utils
 
             logger.LogInformation("Deleting message sent by {User} for reason {Reason}",
                                   args.Message.Author.UsernameWithDiscriminator,
-                                  DeletionReason.ViolateAttachmentLimits);
+                                  MessageDeletionReason.ViolateAttachmentLimits);
             return DeleteMsg(args.Message);
         }
 
@@ -112,7 +112,7 @@ namespace WatcherBot.Utils
             }
 
             logger.LogInformation("Deleting message sent by {User} for reason {Reason}",
-                                  args.Message.Author.UsernameWithDiscriminator, DeletionReason.ProhibitedFormatting);
+                                  args.Message.Author.UsernameWithDiscriminator, MessageDeletionReason.ProhibitedFormatting);
             return DeleteMsg(args.Message);
         }
 
@@ -151,7 +151,7 @@ namespace WatcherBot.Utils
                 {
                     logger.LogInformation("Deleting message sent by {User} for reason {Reason}",
                                           args.Message.Author.UsernameWithDiscriminator,
-                                          DeletionReason.CringeMessage);
+                                          MessageDeletionReason.CringeMessage);
                     await DeleteMsg(args.Message);
                 }
             });
@@ -238,30 +238,14 @@ namespace WatcherBot.Utils
                     logger
                         .LogInformation("Deleting message sent by and muting {User} for reason {Reason}",
                                         args.Message.Author.UsernameWithDiscriminator,
-                                        DeletionReason.PotentialSpam);
-                    DiscordChannel    reportChannel = botMain.SpamReportChannel;
-                    DiscordMember     member        = await botMain.GetMemberFromUser(args.Author);
-                    DiscordDmChannel? dmChannel     = await member.CreateDmChannelAsync();
-                    DiscordMessage? dm = await dmChannel.SendMessageAsync(
-                                                                          $"You have been automatically muted on the Undertow Games server for sending the following message in {args.Channel.Mention}:\n\n"
-                                                                          + $"```\n{messageContent.Replace("`", "")}\n```\n\n"
-                                                                          + "This is a spam prevention measure. If this was a false positive, please contact a moderator or administrator.");
-                    if (!args.Channel.IsPrivate)
-                    {
-#pragma warning disable 4014
-                        reportChannel.SendMessageAsync(
-                                                       $"{args.Author.Mention} has been muted for sending the following message in {args.Channel.Mention}:\n\n"
-                                                       + $"```\n{messageContent.Replace("`", "")}\n```\n\n"
-                                                       + $"*Hits*: {string.Join(", ", hits.Select(h => $"{h.InText} (matched \"{h.InFilter}\")"))}\n\n"
-                                                       + "If this was a false positive, you may revert this by removing the `Muted` role and granting the `Spam filter exemption` role.\n\n"
-                                                       + (dm != null
-                                                              ? "The user has been informed via DM."
-                                                              : "The user **could not** be informed via DM."));
-                    }
+                                        MessageDeletionReason.PotentialSpam);
+                    var reason =
+                        $"*Hits*: {string.Join(", ", hits.Select(h => $"{h.InText} (matched \"{h.InFilter}\")"))}";
 
-                    botMain.MuteUser(args.Author, $"Potential spam {DateTime.UtcNow}");
-                    args.Message.DeleteAsync();
-#pragma warning restore 4014
+                    _ = BarotraumaToolBox.ReportSpam(botMain, args.Message, reason);
+
+                    _ = botMain.MuteUser(args.Author, $"Potential spam {DateTime.UtcNow}");
+                    _ = args.Message.DeleteAsync();
                 }
             });
 
@@ -275,7 +259,7 @@ namespace WatcherBot.Utils
             {
                 logger.LogInformation("Deleting message sent by {User} for reason {Reason}",
                                       args.Message.Author.UsernameWithDiscriminator,
-                                      DeletionReason.ReplyInNoConversationChannel);
+                                      MessageDeletionReason.ReplyInNoConversationChannel);
                 return DeleteMsg(args.Message);
             }
 
@@ -295,7 +279,7 @@ namespace WatcherBot.Utils
             return botMain.IsUserModerator(msg.Author).ContinueWith(Delete);
         }
 
-        private enum DeletionReason
+        public enum MessageDeletionReason
         {
             DisallowedInvite,
             ViolateAttachmentLimits,

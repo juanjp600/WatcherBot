@@ -89,5 +89,25 @@ namespace WatcherBot.Utils
         public static bool ToBool(this IsCringe cringe) => cringe == IsCringe.Yes;
 
         public static IsCringe ToCringe(this bool @bool) => @bool ? IsCringe.Yes : IsCringe.No;
+
+        public static async Task ReportSpam(BotMain botMain1, DiscordMessage spamMessage, string reason)
+        {
+            DiscordChannel reportChannel = botMain1.SpamReportChannel;
+            DiscordMember member = await botMain1.GetMemberFromUser(spamMessage.Author);
+            DiscordDmChannel? dmChannel = await member.CreateDmChannelAsync();
+            DiscordMessage? dm = await dmChannel.SendMessageAsync(
+                $"You have been automatically muted on the Undertow Games server for sending the following message in {spamMessage.Channel.Mention}:\n\n"
+                + $"```\n{spamMessage.Content.Replace("`", "")}\n```\n\n"
+                + "This is a spam prevention measure. If this was a false positive, please contact a moderator or administrator.");
+            if (!spamMessage.Channel.IsPrivate)
+            {
+                _ = reportChannel.SendMessageAsync(
+                    $"{spamMessage.Author.Mention} has been muted for sending the following message in {spamMessage.Channel.Mention}:\n\n"
+                    + $"```\n{spamMessage.Content.Replace("`", "")}\n```\n\n"
+                    + $"{reason}\n\n"
+                    + "If this was a false positive, you may revert this by removing the `Muted` role and granting the `Spam filter exemption` role.\n\n"
+                    + (dm != null ? "The user has been informed via DM." : "The user **could not** be informed via DM."));
+            }
+        }
     }
 }
