@@ -1,15 +1,14 @@
 using Microsoft.Extensions.Configuration;
 
-namespace WatcherBot.Config
+namespace WatcherBot.Config;
+
+public record BanTemplate(string Template, string DefaultAppeal)
 {
-    public record BanTemplate(string Template, string DefaultAppeal)
+    public static BanTemplate FromConfig(Config config)
     {
-        public static BanTemplate FromConfig(Config config)
-        {
-            IConfigurationSection? banSection    = config.Configuration.GetSection("Ban");
-            string                 template      = string.Join("\n", banSection.GetSection("Template").Get<string[]>());
-            string                 defaultAppeal = banSection.GetSection("DefaultAppeal").Get<string>();
-            return new BanTemplate(template, defaultAppeal);
-        }
+        IConfigurationSection? banSection    = config.Configuration.GetSection("Ban");
+        string                 template      = string.Join("\n", banSection.GetSection("Template").Get<string[]>());
+        var                    defaultAppeal = banSection.GetSection("DefaultAppeal").Get<string>();
+        return new BanTemplate(template, defaultAppeal);
     }
 }

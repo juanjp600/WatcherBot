@@ -16,9 +16,9 @@ public class DuplicateMessageFilter : IDisposable
     private static readonly TimeSpan LoopFrequency = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan KeepDuration = TimeSpan.FromSeconds(5);
     private readonly BotMain botMain;
-    private readonly ILogger logger;
     private readonly ConcurrentDictionary<DiscordUser, ConcurrentQueue<DiscordMessage>> cache;
     public readonly CancellationTokenSource CancellationTokenSource;
+    private readonly ILogger logger;
 
     public DuplicateMessageFilter(BotMain botMain)
     {
@@ -40,7 +40,8 @@ public class DuplicateMessageFilter : IDisposable
 
     public void Start()
     {
-        if (CancellationTokenSource.IsCancellationRequested) return;
+        if (CancellationTokenSource.IsCancellationRequested) { return; }
+
         Loop = Task.Run(MainLoop);
     }
 
@@ -54,16 +55,15 @@ public class DuplicateMessageFilter : IDisposable
             foreach ((DiscordUser user, ConcurrentQueue<DiscordMessage> messages) in cache)
             {
                 // Skip empty queues
-                if (messages.IsEmpty) continue;
+                if (messages.IsEmpty) { continue; }
 
                 IGrouping<int, DiscordMessage>? duplicateMessages;
-                int numberDuplicates;
+                int                             numberDuplicates;
                 lock (messages)
                 {
                     // Remove old messages
                     while (messages.TryPeek(out DiscordMessage? message)
-                           && currentTime - message.Timestamp >= KeepDuration)
-                        messages.TryDequeue(out message);
+                           && currentTime - message.Timestamp >= KeepDuration) { messages.TryDequeue(out message); }
 
                     // Now check if any of the remaining messages are identical
                     (duplicateMessages, numberDuplicates) = messages.GroupBy(m => m.Content.GetHashCode())
@@ -72,14 +72,13 @@ public class DuplicateMessageFilter : IDisposable
                 }
 
 
-                if (numberDuplicates < MaxDuplicateMessages) continue;
+                if (numberDuplicates < MaxDuplicateMessages) { continue; }
 
-                logger.LogInformation(
-                    "Deleting messages sent by and muting {User} for reason {Reason} (sent {Count} messages with content {Content})",
-                    user.UsernameWithDiscriminator,
-                    MessageDeleters.MessageDeletionReason.PotentialSpam,
-                    numberDuplicates,
-                    duplicateMessages.First().Content);
+                logger.LogInformation("Deleting messages sent by and muting {User} for reason {Reason} (sent {Count} messages with content {Content})",
+                                      user.UsernameWithDiscriminator,
+                                      MessageDeleters.MessageDeletionReason.PotentialSpam,
+                                      numberDuplicates,
+                                      duplicateMessages.First().Content);
 
                 await botMain.MuteUser(user, "Auto-detected spam messages");
                 await Task.WhenAll(duplicateMessages.Select(m => m.DeleteAsync("Auto-detected spam message")));

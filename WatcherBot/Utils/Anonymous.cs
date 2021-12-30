@@ -1,8 +1,7 @@
-namespace WatcherBot.Utils
+namespace WatcherBot.Utils;
+
+public enum Anonymous
 {
-    public enum Anonymous
-    {
-        No,
-        Yes,
-    }
+    No,
+    Yes,
 }

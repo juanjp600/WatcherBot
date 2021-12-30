@@ -4,22 +4,20 @@ using DisCatSharp;
 using DisCatSharp.Entities;
 using Microsoft.Extensions.Configuration;
 
-namespace WatcherBot.Config
-{
-    public record DiscordConfig
-    {
-        public readonly ImmutableHashSet<DiscordRole> ModeratorRoles;
-        public readonly DiscordGuild OutputGuild;
+namespace WatcherBot.Config;
 
-        public DiscordConfig(Config config, DiscordClient client)
-        {
-            DiscordGuild outputGuild = client.GetGuildAsync(config.OutputGuildId).Result;
-            OutputGuild = outputGuild;
-            ModeratorRoles =
-                (from id in config.Configuration.GetSection("ModeratorRoles").Get<ulong[]>()
-                 let role = outputGuild.Roles[id]
-                 where role is not null
-                 select role).ToImmutableHashSet();
-        }
+public record DiscordConfig
+{
+    public readonly ImmutableHashSet<DiscordRole> ModeratorRoles;
+    public readonly DiscordGuild OutputGuild;
+
+    public DiscordConfig(Config config, DiscordClient client)
+    {
+        DiscordGuild outputGuild = client.GetGuildAsync(config.OutputGuildId).Result;
+        OutputGuild = outputGuild;
+        ModeratorRoles = (from id in config.Configuration.GetSection("ModeratorRoles").Get<ulong[]>()
+                          let role = outputGuild.Roles[id]
+                          where role is not null
+                          select role).ToImmutableHashSet();
     }
 }
