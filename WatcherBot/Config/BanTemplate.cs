@@ -6,9 +6,9 @@ namespace WatcherBot.Config
     {
         public static BanTemplate FromConfig(Config config)
         {
-            IConfigurationSection? banSection = config.Configuration.GetSection("Ban");
-            string template = string.Join("\n", banSection.GetSection("Template").Get<string[]>());
-            string defaultAppeal = banSection.GetSection("DefaultAppeal").Get<string>();
+            IConfigurationSection? banSection    = config.Configuration.GetSection("Ban");
+            string                 template      = string.Join("\n", banSection.GetSection("Template").Get<string[]>());
+            string                 defaultAppeal = banSection.GetSection("DefaultAppeal").Get<string>();
             return new BanTemplate(template, defaultAppeal);
         }
     }

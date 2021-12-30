@@ -1,4 +1,8 @@
 namespace WatcherBot.Utils
 {
-    public enum IsModerator { Yes, No }
+    public enum IsModerator
+    {
+        No,
+        Yes,
+    }
 }

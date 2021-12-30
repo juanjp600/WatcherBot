@@ -1,6 +1,9 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
+using Range = WatcherBot.Utils.Range;
 
 namespace WatcherBot.Config
 {
@@ -14,29 +17,6 @@ namespace WatcherBot.Config
         public readonly ulong OutputGuildId;
         public readonly string DiscordApiToken;
 
-        public readonly struct Range
-        {
-            public readonly int Min;
-            public readonly int Max;
-
-            public Range(int min, int max)
-            {
-                Min = min;
-                Max = max;
-            }
-
-            public Range(string str)
-            {
-                string[]? split = str.Split(',');
-                Min = int.Parse(split[0]);
-                Max = int.Parse(split[1]);
-            }
-
-            public bool Contains(int v) => Min <= v && Max >= v;
-
-            public override string ToString() => $"[{Min}, {Max}]";
-        }
-
         public readonly ImmutableHashSet<ulong> CringeChannels;
         public readonly ImmutableHashSet<char> FormattingCharacters;
         public readonly ImmutableHashSet<ulong> InvitesAllowedOnChannels;
@@ -46,7 +26,14 @@ namespace WatcherBot.Config
         public readonly ImmutableHashSet<ulong> ProhibitCommandsFromUsers;
 
         public readonly ImmutableHashSet<ulong> ProhibitFormattingFromUsers;
+
         // @formatter:on
+        public readonly ImmutableHashSet<string> KnownSafeSubstrings;
+        public readonly ulong MutedRole;
+        public readonly ulong SpamFilterExemptionRole;
+        public readonly ulong SpamReportChannel;
+
+        public readonly ImmutableHashSet<(string Substring, int MaxDistance, float Weight)> SpamSubstrings;
 
         public Config(IConfigurationBuilder builder)
         {
@@ -76,6 +63,25 @@ namespace WatcherBot.Config
             ProhibitFormattingFromUsers =
                 (Configuration.GetSection("ProhibitFormattingFromUsers").Get<ulong[]>() ?? Enumerable.Empty<ulong>())
                 .ToImmutableHashSet();
+
+            //Spam detection
+            IEnumerable<string> spamSubstrs = Configuration.GetSection("SpamSubstrings").Get<string[]>()
+                                              ?? Enumerable.Empty<string>();
+            IEnumerable<int> spamSubstrMaxDist =
+                Configuration.GetSection("SpamSubstringMaxDist").Get<int[]>() ?? Enumerable.Empty<int>();
+            IEnumerable<float> spamSubstrWeights =
+                Configuration.GetSection("SpamSubstringWeights").Get<float[]>() ?? Enumerable.Empty<float>();
+            SpamSubstrings = spamSubstrs
+                             .Zip(spamSubstrMaxDist, (s,  d) => (s, d))
+                             .Zip(spamSubstrWeights, (sd, w) => (sd.s, sd.d, w))
+                             .ToImmutableHashSet();
+            Console.WriteLine(string.Join(", ", SpamSubstrings));
+            KnownSafeSubstrings = (Configuration.GetSection("KnownSafeSubstrings").Get<string[]>()
+                                   ?? Enumerable.Empty<string>())
+                .ToImmutableHashSet();
+            SpamReportChannel       = Configuration.GetSection("SpamReportChannel").Get<ulong>();
+            SpamFilterExemptionRole = Configuration.GetSection("SpamFilterExemptionRole").Get<ulong>();
+            MutedRole               = Configuration.GetSection("MutedRole").Get<ulong>();
         }
 
         public static Config DefaultConfig() =>
