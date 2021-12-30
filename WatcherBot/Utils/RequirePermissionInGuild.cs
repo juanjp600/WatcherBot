@@ -5,29 +5,22 @@ using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
 
-namespace WatcherBot.Utils
+namespace WatcherBot.Utils;
+
+[AttributeUsage(AttributeTargets.Method)]
+public class RequirePermissionInGuild : CheckBaseAttribute
 {
-    [AttributeUsage(AttributeTargets.Method)]
-    public class RequirePermissionInGuild : CheckBaseAttribute
+    private readonly Permissions permissions;
+
+    public RequirePermissionInGuild(Permissions permissions) => this.permissions = permissions;
+
+    public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
     {
-        private readonly Permissions permissions;
+        var botMain = (BotMain?)ctx.Services.GetService(typeof(BotMain));
+        if (botMain?.DiscordConfig.OutputGuild is null) { return false; }
 
-        public RequirePermissionInGuild(Permissions permissions)
-        {
-            this.permissions = permissions;
-        }
+        DiscordMember? member = await botMain.DiscordConfig.OutputGuild.GetMemberAsync(ctx.User.Id);
 
-        public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
-        {
-            var botMain = (BotMain?)ctx.Services.GetService(typeof(BotMain));
-            if (botMain?.DiscordConfig.OutputGuild is null)
-            {
-                return false;
-            }
-
-            DiscordMember? member = await botMain.DiscordConfig.OutputGuild.GetMemberAsync(ctx.User.Id);
-
-            return member?.Permissions.HasFlag(permissions) ?? false;
-        }
+        return member?.Permissions.HasFlag(permissions) ?? false;
     }
 }

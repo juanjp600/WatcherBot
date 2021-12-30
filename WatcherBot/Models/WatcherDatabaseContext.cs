@@ -5,29 +5,25 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-namespace WatcherBot.Models
+namespace WatcherBot.Models;
+
+public class WatcherDatabaseContext : DbContext
 {
-    public class WatcherDatabaseContext : DbContext
+    private static readonly Lazy<string> ConnectionString = new(() =>
     {
-        private static readonly Lazy<string> ConnectionString =
-            new(() =>
-            {
-                var                    configBuilder             = new ConfigurationBuilder();
-                IConfigurationBuilder? jsonFile                  = configBuilder.AddJsonFile("appsettings.json");
-                IConfigurationRoot?    build                     = jsonFile.Build();
-                string?                connString                = build.GetConnectionString("WatcherDatabase");
-                string                 executingAssemblyLocation = Assembly.GetExecutingAssembly().Location;
-                return connString.Replace("$WD",
-                                          Path.GetDirectoryName(
-                                                                executingAssemblyLocation));
-            });
+        var                    configBuilder             = new ConfigurationBuilder();
+        IConfigurationBuilder? jsonFile                  = configBuilder.AddJsonFile("appsettings.json");
+        IConfigurationRoot?    build                     = jsonFile.Build();
+        string?                connString                = build.GetConnectionString("WatcherDatabase");
+        string                 executingAssemblyLocation = Assembly.GetExecutingAssembly().Location;
+        return connString.Replace("$WD", Path.GetDirectoryName(executingAssemblyLocation));
+    });
 
 #pragma warning disable 8618
-        // ReSharper disable once UnusedAutoPropertyAccessor.Global
-        public DbSet<User> Users { get; set; }
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
+    public DbSet<User> Users { get; set; }
 #pragma warning restore 8618
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
-            optionsBuilder.UseSqlite(ConnectionString.Value);
-    }
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
+        optionsBuilder.UseSqlite(ConnectionString.Value);
 }
