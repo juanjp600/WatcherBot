@@ -63,7 +63,7 @@ namespace WatcherBot
             {
                 DmHelp                   = true,
                 EnableMentionPrefix      = true,
-                Services                 = services,
+                ServiceProvider          = services,
                 StringPrefixes           = new[] { "!" },
                 UseDefaultCommandHandler = false,
             };
