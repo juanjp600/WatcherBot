@@ -9,8 +9,8 @@ public static class Logging
     public static Task CommandExecuted(CommandsNextExtension extension, CommandExecutionEventArgs args)
     {
         extension.Client.Logger.LogInformation("Calling {Command} (invoked by {User})",
-                                               args.Command.QualifiedName,
-                                               args.Context.User.UsernameWithDiscriminator);
+                                               args.Command.QualifiedName ?? "[NULL]",
+                                               args.Context?.User?.UsernameWithDiscriminator ?? "[NULL]");
         return Task.CompletedTask;
     }
 
@@ -18,8 +18,8 @@ public static class Logging
     {
         extension.Client.Logger.LogWarning(args.Exception,
                                            "Command {Command} (invoked by {User}) failed to execute",
-                                           args.Command.QualifiedName,
-                                           args.Context.User.UsernameWithDiscriminator);
+                                           args.Command?.QualifiedName ?? "[NULL]",
+                                           args.Context?.User?.UsernameWithDiscriminator ?? "[NULL]");
         return Task.CompletedTask;
     }
 }
