@@ -54,44 +54,54 @@ public class DuplicateMessageFilter : IDisposable
             DateTimeOffset currentTime = DateTimeOffset.Now;
             foreach ((DiscordUser user, ConcurrentQueue<DiscordMessage> messages) in cache)
             {
-                // Skip empty queues
-                if (messages.IsEmpty) { continue; }
-
-                IGrouping<int, DiscordMessage>? duplicateMessages;
-                int                             numberDuplicates;
-                lock (messages)
+                try
                 {
                     // Remove old messages
                     while (messages.TryPeek(out DiscordMessage? message)
                            && currentTime - message.Timestamp >= KeepDuration)
                     {
-                        logger.LogInformation($"Removing old message for {user.UsernameWithDiscriminator}: {currentTime} - {message.Timestamp} = {(currentTime - message.Timestamp)}");
+                        logger.LogInformation(
+                            $"Removing old message for {user.UsernameWithDiscriminator}: {currentTime} - {message.Timestamp} = {(currentTime - message.Timestamp)}");
                         messages.TryDequeue(out message);
                     }
 
+                    // Skip empty queues
+                    if (messages.IsEmpty) { continue; }
+
+                    IGrouping<string, DiscordMessage>? duplicateMessages;
+                    int numberDuplicates;
+
                     // Now check if any of the remaining messages are identical
-                    (duplicateMessages, numberDuplicates) = messages.GroupBy(m => m.Content.GetHashCode())
-                                                                    .Select(g => (Messages: g, Count: g.Count()))
-                                                                    .MaxBy(t => t.Count);
+                    (duplicateMessages, numberDuplicates) = messages.GroupBy(m => m.Content)
+                        .Select(g => (Messages: g, Count: g.Count()))
+                        .MaxBy(t => t.Count);
+
+                    if (numberDuplicates < MaxDuplicateMessages) { continue; }
+
+                    logger.LogInformation(
+                        "Deleting messages sent by and muting {User} for reason {Reason} (sent {Count} messages with content {Content})",
+                        user.UsernameWithDiscriminator,
+                        MessageDeleters.MessageDeletionReason.PotentialSpam,
+                        numberDuplicates,
+                        duplicateMessages.First().Content);
+
+                    var channels = duplicateMessages.Select(m => m.Channel).DistinctBy(c => c.Id).ToArray();
+
+                    string reason =
+                        $"{numberDuplicates} copies of this message sent in the last {KeepDuration.TotalSeconds}s in {string.Join(", ", channels.Select(c => c.Mention))}.";
+                    await BarotraumaToolBox.ReportSpam(botMain, duplicateMessages.First(), reason);
+                    
+                    await botMain.MuteUser(user, "Auto-detected spam messages");
+                    await Task.WhenAll(duplicateMessages.Select(m => m.DeleteAsync("Auto-detected spam message")));
+                    messages.Clear();
                 }
-
-
-                if (numberDuplicates < MaxDuplicateMessages) { continue; }
-
-                logger.LogInformation("Deleting messages sent by and muting {User} for reason {Reason} (sent {Count} messages with content {Content})",
-                                      user.UsernameWithDiscriminator,
-                                      MessageDeleters.MessageDeletionReason.PotentialSpam,
-                                      numberDuplicates,
-                                      duplicateMessages.First().Content);
-
-                await botMain.MuteUser(user, "Auto-detected spam messages");
-                await Task.WhenAll(duplicateMessages.Select(m => m.DeleteAsync("Auto-detected spam message")));
-
-                string reason =
-                    $"{numberDuplicates} copies of this message sent in the last {KeepDuration.TotalSeconds}s in {string.Join(", ", duplicateMessages.Select(m => m.Channel).Distinct().Select(c => c.Mention))}.";
-                await BarotraumaToolBox.ReportSpam(botMain, duplicateMessages.First(), reason);
+                catch (Exception e)
+                {
+                    messages.TryPeek(out var sus);
+                    logger.LogError($"Duplicate filter failed for user {sus?.Author?.UsernameWithDiscriminator ?? "[NULL]"}: {e}");
+                    messages.Clear();
+                }
             }
-
             await Task.Delay(LoopFrequency);
         }
     }
@@ -109,7 +119,7 @@ public class DuplicateMessageFilter : IDisposable
         DiscordMessage message) =>
         (_, current) =>
         {
-            logger.LogInformation($"Update queue from {message.Author.UsernameWithDiscriminator} at {message.Timestamp}");
+            logger.LogInformation($"Update queue of size {current.Count} from {message.Author.UsernameWithDiscriminator} at {message.Timestamp}");
             current.Enqueue(message);
             return current;
         };
