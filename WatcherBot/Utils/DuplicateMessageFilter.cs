@@ -110,6 +110,9 @@ public class DuplicateMessageFilter : IDisposable
 
     public Task MessageCreated(DiscordClient sender, MessageCreateEventArgs args)
     {
+        var timestamp = args.Message.Timestamp;
+        var now = DateTimeOffset.Now;
+        logger.LogInformation($"Timestamp: {timestamp}; Now: {now}");
         cache.AddOrUpdate(args.Message.Author, Add(args.Message), Update(args.Message));
         return Task.CompletedTask;
     }
