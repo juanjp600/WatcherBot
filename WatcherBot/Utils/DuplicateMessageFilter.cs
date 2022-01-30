@@ -63,7 +63,11 @@ public class DuplicateMessageFilter : IDisposable
                 {
                     // Remove old messages
                     while (messages.TryPeek(out DiscordMessage? message)
-                           && currentTime - message.Timestamp >= KeepDuration) { messages.TryDequeue(out message); }
+                           && currentTime - message.Timestamp >= KeepDuration)
+                    {
+                        logger.LogInformation($"Removing old message for {user.UsernameWithDiscriminator}: {currentTime} - {message.Timestamp} = {(currentTime - message.Timestamp)}");
+                        messages.TryDequeue(out message);
+                    }
 
                     // Now check if any of the remaining messages are identical
                     (duplicateMessages, numberDuplicates) = messages.GroupBy(m => m.Content.GetHashCode())
