@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using DisCatSharp.CommandsNext;
@@ -14,10 +15,20 @@ public class HyenaCommandModule : BaseCommandModule
     private const string Endpoint = "https://api.yeen.land";
     private static readonly HttpClient HttpClient = new();
 
+    [Command("trash")]
+    [Description("garbaggio")]
+    public async Task Trash(CommandContext context) =>
+        throw new Exception("test exception");
+
     [Command("sus")]
     [Description("smh my head")]
     public async Task Sus(CommandContext context) =>
         await context.RespondDmAsync("https://tenor.com/view/keanu-reeves-knife-gif-19576998");
+
+    [Command("bezos")]
+    [Description("ffs")]
+    public async Task Bezos(CommandContext context) =>
+        await context.RespondDmAsync("please shut the fuck up");
 
     [Command("hyena")]
     [Aliases("yeen")]

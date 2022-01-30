@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using System;
+using System.Collections.Generic;
 using Barotrauma;
 
 namespace WatcherBot.Utils;
@@ -59,5 +60,20 @@ public static class LevenshteinDistance
         }
 
         return foundIndex >= 0 ? (foundIndex, foundLength, foundDistance) : null;
+    }
+    
+    public readonly struct EqualityComparer : IEqualityComparer<string>
+    {
+        public readonly int MaxDistance;
+        public EqualityComparer(int maxDistance)
+        {
+            MaxDistance = maxDistance;
+        }
+
+        public bool Equals(string? x, string? y)
+            => Calculate(x ?? "", y ?? "") <= MaxDistance;
+
+        public int GetHashCode(string obj)
+            => 0;
     }
 }

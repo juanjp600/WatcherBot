@@ -14,7 +14,7 @@ public class DuplicateMessageFilter : IDisposable
 {
     private const int MaxDuplicateMessages = 3;
     private static readonly TimeSpan LoopFrequency = TimeSpan.FromSeconds(1);
-    private static readonly TimeSpan KeepDuration = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan KeepDuration = TimeSpan.FromSeconds(60);
     private readonly BotMain botMain;
     private readonly ConcurrentDictionary<DiscordUser, ConcurrentQueue<DiscordMessage>> cache;
     public readonly CancellationTokenSource CancellationTokenSource;
