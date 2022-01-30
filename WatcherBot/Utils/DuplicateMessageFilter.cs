@@ -107,20 +107,17 @@ public class DuplicateMessageFilter : IDisposable
     }
 
     private Func<DiscordUser, ConcurrentQueue<DiscordMessage>> Add(DiscordMessage message) =>
-        _ =>
+        user =>
         {
-            logger.LogInformation($"Add queue from {message.Author.UsernameWithDiscriminator} at {message.Timestamp}");
             ConcurrentQueue<DiscordMessage> queue = new();
-            queue.Enqueue(message);
-            return queue;
+            return Update(message)(user, queue);
         };
 
     private Func<DiscordUser, ConcurrentQueue<DiscordMessage>, ConcurrentQueue<DiscordMessage>> Update(
         DiscordMessage message) =>
         (_, current) =>
         {
-            logger.LogInformation($"Update queue of size {current.Count} from {message.Author.UsernameWithDiscriminator} at {message.Timestamp}");
-            current.Enqueue(message);
+            if (!string.IsNullOrWhiteSpace(message?.Content)) { current.Enqueue(message); }
             return current;
         };
 
