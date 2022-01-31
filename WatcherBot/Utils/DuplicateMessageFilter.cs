@@ -60,8 +60,9 @@ public class DuplicateMessageFilter : IDisposable
                     while (messages.TryPeek(out DiscordMessage? message)
                            && currentTime - message.Timestamp >= KeepDuration)
                     {
-                        logger.LogInformation(
-                            $"Removing old message for {user.UsernameWithDiscriminator}: {currentTime} - {message.Timestamp} = {(currentTime - message.Timestamp)}");
+                        logger.LogInformation("Removing old message for {User}: {CurrentTime} - {MostRecentMessage} = {TimeDifference}",
+                                              user.UsernameWithDiscriminator, currentTime, message.Timestamp,
+                                              currentTime - message.Timestamp);
                         messages.TryDequeue(out message);
                     }
 
@@ -69,39 +70,44 @@ public class DuplicateMessageFilter : IDisposable
                     if (messages.IsEmpty) { continue; }
 
                     IGrouping<string, DiscordMessage>? duplicateMessages;
-                    int numberDuplicates;
+                    int                                numberDuplicates;
 
                     // Now check if any of the remaining messages are identical
                     (duplicateMessages, numberDuplicates) = messages.GroupBy(m => m.Content)
-                        .Select(g => (Messages: g, Count: g.Count()))
-                        .MaxBy(t => t.Count);
+                                                                    .Select(g => (Messages: g, Count: g.Count()))
+                                                                    .MaxBy(t => t.Count);
 
                     if (numberDuplicates < MaxDuplicateMessages) { continue; }
 
-                    logger.LogInformation(
-                        "Deleting messages sent by and muting {User} for reason {Reason} (sent {Count} messages with content {Content})",
-                        user.UsernameWithDiscriminator,
-                        MessageDeleters.MessageDeletionReason.PotentialSpam,
-                        numberDuplicates,
-                        duplicateMessages.First().Content);
+                    logger.LogInformation("Deleting messages sent by and muting {User} for reason {Reason} (sent {Count} messages with content {Content})",
+                                          user.UsernameWithDiscriminator,
+                                          MessageDeleters.MessageDeletionReason.PotentialSpam,
+                                          numberDuplicates,
+                                          duplicateMessages.First().Content);
 
-                    var channels = duplicateMessages.Select(m => m.Channel).DistinctBy(c => c.Id).ToArray();
+                    DiscordChannel[] channels =
+                        duplicateMessages.Select(m => m.Channel).DistinctBy(c => c.Id).ToArray();
 
                     string reason =
-                        $"{numberDuplicates} copies of this message sent in the last {KeepDuration.TotalSeconds}s in {string.Join(", ", channels.Select(c => c.Mention))}.";
+                        $"{numberDuplicates} copies of this message sent in the last {KeepDuration.TotalSeconds}s"
+                        + $" in {string.Join(", ", channels.Select(c => c.Mention))}.";
                     await BarotraumaToolBox.ReportSpam(botMain, duplicateMessages.First(), reason);
-                    
+
                     await botMain.MuteUser(user, "Auto-detected spam messages");
                     await Task.WhenAll(duplicateMessages.Select(m => m.DeleteAsync("Auto-detected spam message")));
+
+                    // Clear the queue
                     messages.Clear();
                 }
                 catch (Exception e)
                 {
-                    messages.TryPeek(out var sus);
-                    logger.LogError($"Duplicate filter failed for user {sus?.Author?.UsernameWithDiscriminator ?? "[NULL]"}: {e}");
+                    messages.TryPeek(out DiscordMessage? sus);
+                    logger.LogError(e, "Duplicate filter failed for user {User}",
+                                    sus?.Author?.UsernameWithDiscriminator ?? "[NULL]");
                     messages.Clear();
                 }
             }
+
             await Task.Delay(LoopFrequency);
         }
     }
@@ -123,9 +129,9 @@ public class DuplicateMessageFilter : IDisposable
 
     public Task MessageCreated(DiscordClient sender, MessageCreateEventArgs args)
     {
-        var timestamp = args.Message.Timestamp;
-        var now = DateTimeOffset.Now;
-        logger.LogInformation($"Timestamp: {timestamp}; Now: {now}");
+        DateTimeOffset timestamp = args.Message.Timestamp;
+        DateTimeOffset now       = DateTimeOffset.Now;
+        logger.LogInformation("Message created at timestamp: {Timestamp}; Now: {Now}", timestamp, now);
         cache.AddOrUpdate(args.Message.Author, Add(args.Message), Update(args.Message));
         return Task.CompletedTask;
     }

@@ -47,7 +47,8 @@ public class BotMain : IDisposable
         GitHubClient.SetRequestTimeout(TimeSpan.FromSeconds(5));
 
         //Discord API
-        var config = new DiscordConfiguration {
+        var config = new DiscordConfiguration
+        {
             Token         = Config.DiscordApiToken,
             TokenType     = TokenType.Bot,
             Intents       = DiscordIntents.AllUnprivileged,
@@ -71,11 +72,12 @@ public class BotMain : IDisposable
 
         ServiceProvider services = new ServiceCollection().AddSingleton(this).BuildServiceProvider();
 
-        CommandsNextConfiguration commandsConfig = new() {
+        CommandsNextConfiguration commandsConfig = new()
+        {
             DmHelp                   = true,
             EnableMentionPrefix      = true,
             ServiceProvider          = services,
-            StringPrefixes           = new[] {"!"},
+            StringPrefixes           = new[] { "!" },
             UseDefaultCommandHandler = false,
         };
         CommandsNextExtension commands = Client.UseCommandsNext(commandsConfig);
@@ -130,7 +132,7 @@ public class BotMain : IDisposable
     {
         DiscordGuild  guild     = DiscordConfig.OutputGuild;
         DiscordMember guildUser = user is DiscordMember rgu ? rgu : await guild.GetMemberAsync(user.Id);
-        guildUser.ReplaceRolesAsync(guildUser.Roles.Concat(new[] {MutedRole}), reason);
+        guildUser.ReplaceRolesAsync(guildUser.Roles.Concat(new[] { MutedRole }), reason);
     }
 
     private Task HandleCommand(DiscordClient sender, MessageCreateEventArgs args)
@@ -139,8 +141,8 @@ public class BotMain : IDisposable
         {
             return (typeof(CommandsNextExtension).GetMethod("HandleCommandsAsync",
                                                             BindingFlags.Instance | BindingFlags.NonPublic)!
-                                                 .Invoke(sender.GetCommandsNext(), new object?[] {sender, args}) as
-                    Task) !;
+                                                 .Invoke(sender.GetCommandsNext(), new object?[] { sender, args }) as
+                        Task) !;
         }
 
         return Task.CompletedTask;

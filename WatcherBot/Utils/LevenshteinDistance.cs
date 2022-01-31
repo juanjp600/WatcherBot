@@ -61,10 +61,11 @@ public static class LevenshteinDistance
 
         return foundIndex >= 0 ? (foundIndex, foundLength, foundDistance) : null;
     }
-    
+
     public readonly struct EqualityComparer : IEqualityComparer<string>
     {
         public readonly int MaxDistance;
+
         public EqualityComparer(int maxDistance)
         {
             MaxDistance = maxDistance;

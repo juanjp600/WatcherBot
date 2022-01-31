@@ -67,7 +67,7 @@ public class MessageDeleters : IDisposable
 
     public static bool TextContainsInvite(string messageContent)
     {
-        string[] invites = {"discord.gg/", "discord.com/invite", "discordapp.com/invite"};
+        string[] invites = { "discord.gg/", "discord.com/invite", "discordapp.com/invite" };
         return invites.Any(i => messageContent.Contains(i, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -177,12 +177,11 @@ public class MessageDeleters : IDisposable
                 return;
             }
 
-            char[] whitespace = new[] {'\n', '\t', '\r', ' '}.Concat(messageContentToTest.Where(char.IsWhiteSpace))
-                                                             .Distinct()
-                                                             .ToArray();
+            char[] whitespace = new[] { '\n', '\t', '\r', ' ' }.Concat(messageContentToTest.Where(char.IsWhiteSpace))
+                                                               .Distinct()
+                                                               .ToArray();
             string[]  messageContentSplit = messageContentToTest.Split(whitespace);
-            Stopwatch sw                  = new();
-            sw.Start();
+            var       sw                  = Stopwatch.StartNew();
             (string InText, string InFilter, float Weight)[] hits = messageContentSplit
                                                                     .Where(s1 => !string.IsNullOrWhiteSpace(s1))
                                                                     .Select(s1 => botMain.Config.SpamSubstrings
@@ -192,8 +191,8 @@ public class MessageDeleters : IDisposable
                                                                                                 s2
                                                                                                     .Substring)
                                                                                         <= s2.MaxDistance)
-                                                                                is { } h
-                                                                                ? (s1, h.Substring, h.Weight)
+                                                                                is var (substring, _, weight)
+                                                                                      ? (s1, substring, weight)
                                                                                 : ("", "", 0.0f))
                                                                     .Cast<(string InText, string InFilter, float Weight
                                                                         )>()

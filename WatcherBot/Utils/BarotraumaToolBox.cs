@@ -71,21 +71,21 @@ public static class BarotraumaToolBox
         DiscordChannel    reportChannel = botMain.SpamReportChannel;
         DiscordMember     member        = await botMain.GetMemberFromUser(spamMessage.Author);
         DiscordDmChannel? dmChannel     = await member.CreateDmChannelAsync();
-        DiscordMessage? dm = null;
-        Exception? dmException = null;
+        DiscordMessage?   dm            = null;
+        Exception?        dmException   = null;
         try
         {
             dm = await
-                dmChannel
-                    .SendMessageAsync(
-                        $"You have been automatically muted on the Undertow Games server for sending the following message in {spamMessage.Channel.Mention}:\n\n"
-                        + $"```\n{spamMessage.Content.Replace("`", "")}\n```\n\n"
-                        + "This is a spam prevention measure. If this was a false positive, please contact a moderator or administrator.");
+                     dmChannel
+                         .SendMessageAsync($"You have been automatically muted on the Undertow Games server for sending the following message in {spamMessage.Channel.Mention}:\n\n"
+                                           + $"```\n{spamMessage.Content.Replace("`", "")}\n```\n\n"
+                                           + "This is a spam prevention measure. If this was a false positive, please contact a moderator or administrator.");
         }
         catch (Exception e)
         {
             dmException = e;
         }
+
         if (!spamMessage.Channel.IsPrivate)
         {
             _ =
@@ -96,10 +96,10 @@ public static class BarotraumaToolBox
                                       + "If this was a false positive, you may revert this by removing the `Muted` role and granting the `Spam filter exemption` role.\n\n"
                                       + (dm != null
                                              ? "The user has been informed via DM."
-                                             : $"The user **could not** be informed via DM.\n\n")
+                                             : "The user **could not** be informed via DM.\n\n")
                                       + (dmException != null
-                                            ? $"The following exception was thrown: {dmException}"
-                                            : ""));
+                                             ? $"The following exception was thrown: {dmException}"
+                                             : ""));
         }
     }
 }
