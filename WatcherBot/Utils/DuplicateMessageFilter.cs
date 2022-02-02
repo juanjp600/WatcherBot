@@ -123,7 +123,10 @@ public class DuplicateMessageFilter : IDisposable
         DiscordMessage message) =>
         (_, current) =>
         {
-            if (!string.IsNullOrWhiteSpace(message?.Content)) { current.Enqueue(message); }
+            if (!string.IsNullOrWhiteSpace(message.Content) && message.Content.ContainsLink())
+            {
+                current.Enqueue(message);
+            }
             return current;
         };
 

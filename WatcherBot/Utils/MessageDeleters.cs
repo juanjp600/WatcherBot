@@ -172,7 +172,7 @@ public class MessageDeleters : IDisposable
                 messageContentToTest = messageContentToTest.Replace(safeSubstr, "");
             }
 
-            if (messageContentToTest.CountSubstrings("https://") + messageContentToTest.CountSubstrings("http://") <= 0)
+            if (!messageContentToTest.ContainsLink())
             {
                 return;
             }
