@@ -7,6 +7,9 @@ namespace WatcherBot.Utils;
 
 public static class BarotraumaToolBox
 {
+    public static bool ContainsLink(this string content) =>
+        content.CountSubstrings("https://") + content.CountSubstrings("http://") > 0;
+
     private static async Task<DiscordDmChannel?> GetDmChannelAsync(this CommandContext context)
     {
         if (context.Channel is DiscordDmChannel dmChannel) { return dmChannel; }
