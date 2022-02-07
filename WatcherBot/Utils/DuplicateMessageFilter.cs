@@ -123,7 +123,9 @@ public class DuplicateMessageFilter : IDisposable
         DiscordMessage message) =>
         (_, current) =>
         {
-            if (!string.IsNullOrWhiteSpace(message.Content) && message.Content.ContainsLink())
+            if (message.Channel.GuildId == botMain.Config.OutputGuildId
+                && !string.IsNullOrWhiteSpace(message.Content)
+                && message.Content.ContainsLink())
             {
                 current.Enqueue(message);
             }
