@@ -1,5 +1,4 @@
-﻿#nullable enable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -1873,13 +1872,22 @@ public static class Homoglyphs
 
     public static bool Compare(string a, string b)
     {
-        if (a.Equals(b, StringComparison.InvariantCulture)) { return true; }
+        if (a.Equals(b, StringComparison.InvariantCulture))
+        {
+            return true;
+        }
 
-        if (a.Length != b.Length) { return false; }
+        if (a.Length != b.Length)
+        {
+            return false;
+        }
 
         for (var i = 0; i < a.Length; i++)
         {
-            if (!Compare(a[i], b[i])) { return false; }
+            if (!Compare(a[i], b[i]))
+            {
+                return false;
+            }
         }
 
         return true;
@@ -1887,9 +1895,15 @@ public static class Homoglyphs
 
     public static bool Compare(char a, char b)
     {
-        if (a == b) { return true; }
+        if (a == b)
+        {
+            return true;
+        }
 
-        if (!CharToHomoglyphGroup.TryGetValue(a, out ImmutableHashSet<uint>? g1)) { return false; }
+        if (!CharToHomoglyphGroup.TryGetValue(a, out ImmutableHashSet<uint>? g1))
+        {
+            return false;
+        }
 
         return g1.Contains(b);
     }

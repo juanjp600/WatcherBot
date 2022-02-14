@@ -2,7 +2,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace WatcherBot.Config;
 
-public record BanTemplate(string Template, string DefaultAppeal)
+public record struct BanTemplate(string Template, string DefaultAppeal)
 {
     public static BanTemplate FromConfig(Config config)
     {

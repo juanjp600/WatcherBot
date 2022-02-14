@@ -7,29 +7,27 @@ using Range = WatcherBot.Utils.Range;
 
 namespace WatcherBot.Config;
 
-public record Config
+public class Config
 {
-    // @formatter: off
+    public readonly ImmutableDictionary<ulong, Range> AttachmentLimits;
     public readonly BanTemplate BanTemplate;
     public readonly IConfigurationRoot Configuration;
 
-    public readonly string GitHubToken;
-    public readonly ulong OutputGuildId;
-    public readonly string DiscordApiToken;
-
     public readonly ImmutableHashSet<ulong> CringeChannels;
+    public readonly string DiscordApiToken;
     public readonly ImmutableHashSet<char> FormattingCharacters;
+
+    public readonly string GitHubToken;
     public readonly ImmutableHashSet<ulong> InvitesAllowedOnChannels;
     public readonly ImmutableHashSet<ulong> InvitesAllowedOnServers;
+
+    public readonly ImmutableHashSet<string> KnownSafeSubstrings;
     public readonly ImmutableHashSet<ulong> ModeratorRoleIds;
-    public readonly ImmutableDictionary<ulong, Range> AttachmentLimits;
+    public readonly ulong MutedRole;
+    public readonly ulong OutputGuildId;
     public readonly ImmutableHashSet<ulong> ProhibitCommandsFromUsers;
 
     public readonly ImmutableHashSet<ulong> ProhibitFormattingFromUsers;
-
-    // @formatter:on
-    public readonly ImmutableHashSet<string> KnownSafeSubstrings;
-    public readonly ulong MutedRole;
     public readonly ulong SpamFilterExemptionRole;
     public readonly ulong SpamReportChannel;
 

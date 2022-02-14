@@ -40,7 +40,10 @@ public class DuplicateMessageFilter : IDisposable
 
     public void Start()
     {
-        if (CancellationTokenSource.IsCancellationRequested) { return; }
+        if (CancellationTokenSource.IsCancellationRequested)
+        {
+            return;
+        }
 
         Loop = Task.Run(MainLoop);
     }
@@ -67,7 +70,10 @@ public class DuplicateMessageFilter : IDisposable
                     }
 
                     // Skip empty queues
-                    if (messages.IsEmpty) { continue; }
+                    if (messages.IsEmpty)
+                    {
+                        continue;
+                    }
 
                     IGrouping<string, DiscordMessage>? duplicateMessages;
                     int                                numberDuplicates;
@@ -77,7 +83,10 @@ public class DuplicateMessageFilter : IDisposable
                                                                     .Select(g => (Messages: g, Count: g.Count()))
                                                                     .MaxBy(t => t.Count);
 
-                    if (numberDuplicates < MaxDuplicateMessages) { continue; }
+                    if (numberDuplicates < MaxDuplicateMessages)
+                    {
+                        continue;
+                    }
 
                     logger.LogInformation("Deleting messages sent by and muting {User} for reason {Reason} (sent {Count} messages with content {Content})",
                                           user.UsernameWithDiscriminator,
@@ -129,6 +138,7 @@ public class DuplicateMessageFilter : IDisposable
             {
                 current.Enqueue(message);
             }
+
             return current;
         };
 

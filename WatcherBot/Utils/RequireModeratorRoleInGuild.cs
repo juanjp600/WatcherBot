@@ -13,7 +13,10 @@ public class RequireModeratorRoleInGuild : CheckBaseAttribute
     public override async Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
     {
         var botMain = (BotMain?)ctx.Services.GetService(typeof(BotMain));
-        if (botMain?.DiscordConfig.OutputGuild is null) { return false; }
+        if (botMain?.DiscordConfig.OutputGuild is null)
+        {
+            return false;
+        }
 
         DiscordMember? member = await botMain.DiscordConfig.OutputGuild.GetMemberAsync(ctx.User.Id);
 

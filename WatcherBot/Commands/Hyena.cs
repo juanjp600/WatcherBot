@@ -4,7 +4,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
-using Serilog;
 using WatcherBot.Utils;
 
 namespace WatcherBot.Commands;
@@ -15,14 +14,14 @@ public class HyenaCommandModule : BaseCommandModule
 {
     private const string Endpoint = "https://api.yeen.land";
     private static readonly HttpClient HttpClient = new();
-    private static JsonSerializerOptions jsonSerializerOptions = new()
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true,
     };
 
     [Command("trash")]
     [Description("garbaggio")]
-    public async Task Trash(CommandContext context) =>
+    public Task Trash(CommandContext context) =>
         throw new Exception("test exception");
 
     [Command("sus")]
@@ -58,7 +57,7 @@ public class HyenaCommandModule : BaseCommandModule
     private static async Task<HyenaUrl?> QueryApi(string requestUriString)
     {
         string response = await HttpClient.GetStringAsync(requestUriString);
-        var    url      = JsonSerializer.Deserialize<HyenaUrl>(response, jsonSerializerOptions);
+        var    url      = JsonSerializer.Deserialize<HyenaUrl>(response, JsonSerializerOptions);
 
         return url;
     }

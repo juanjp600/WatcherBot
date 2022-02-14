@@ -46,7 +46,10 @@ public class MessageDeleters : IDisposable
     {
         Delete DeletionCondition()
         {
-            if (botMain.Config.InvitesAllowedOnChannels.Contains(args.Message.Channel.Id)) { return Delete.No; }
+            if (botMain.Config.InvitesAllowedOnChannels.Contains(args.Message.Channel.Id))
+            {
+                return Delete.No;
+            }
 
             if (args.Guild is null || botMain.Config.InvitesAllowedOnServers.Contains(args.Guild.Id))
             {
@@ -56,7 +59,10 @@ public class MessageDeleters : IDisposable
             return TextContainsInvite(args.Message.Content) ? Delete.Yes : Delete.No;
         }
 
-        if (!GeneralCondition(args.Message) || DeletionCondition() != Delete.Yes) { return Task.CompletedTask; }
+        if (!GeneralCondition(args.Message) || DeletionCondition() != Delete.Yes)
+        {
+            return Task.CompletedTask;
+        }
 
 
         logger.LogInformation("Deleting message sent by {User} for reason {Reason}",
@@ -75,7 +81,10 @@ public class MessageDeleters : IDisposable
     {
         Delete DeletionCondition()
         {
-            if (!botMain.Config.AttachmentLimits.ContainsKey(args.Channel.Id)) { return Delete.No; }
+            if (!botMain.Config.AttachmentLimits.ContainsKey(args.Channel.Id))
+            {
+                return Delete.No;
+            }
 
             bool insecureLink = args.Message.Content.Contains("http://", StringComparison.OrdinalIgnoreCase);
             int numberWellSizedAttachments =
@@ -91,7 +100,10 @@ public class MessageDeleters : IDisposable
             return attachmentCountWithinLimits && allAttachmentsWellSized && !insecureLink ? Delete.No : Delete.Yes;
         }
 
-        if (!GeneralCondition(args.Message) || DeletionCondition() != Delete.Yes) { return Task.CompletedTask; }
+        if (!GeneralCondition(args.Message) || DeletionCondition() != Delete.Yes)
+        {
+            return Task.CompletedTask;
+        }
 
         logger.LogInformation("Deleting message sent by {User} for reason {Reason}",
                               args.Message.Author.UsernameWithDiscriminator,
@@ -103,7 +115,10 @@ public class MessageDeleters : IDisposable
     {
         if (!GeneralCondition(args.Message)
             || !botMain.Config.ProhibitFormattingFromUsers.Contains(args.Author.Id)
-            || !botMain.Config.FormattingCharacters.Overlaps(args.Message.Content)) { return Task.CompletedTask; }
+            || !botMain.Config.FormattingCharacters.Overlaps(args.Message.Content))
+        {
+            return Task.CompletedTask;
+        }
 
         logger.LogInformation("Deleting message sent by {User} for reason {Reason}",
                               args.Message.Author.UsernameWithDiscriminator,
@@ -124,7 +139,10 @@ public class MessageDeleters : IDisposable
                 if (args.Message.Channel is not DiscordDmChannel)
                 {
                     user.NewMessage(channelIsCringe);
-                    try { databaseContext.SaveChanges(); }
+                    try
+                    {
+                        databaseContext.SaveChanges();
+                    }
                     catch (DbUpdateException exc)
                     {
                         Console.WriteLine($"{nameof(databaseContext.SaveChanges)} threw an exception:");
@@ -152,16 +170,31 @@ public class MessageDeleters : IDisposable
     {
         Task _ = Task.Run(async () =>
         {
-            if (!args.Channel.IsPrivate && botMain.DiscordConfig.OutputGuild.Id != args.Guild.Id) { return; }
+            if (!args.Channel.IsPrivate && botMain.DiscordConfig.OutputGuild.Id != args.Guild.Id)
+            {
+                return;
+            }
 
-            if (args.Author.IsBot) { return; }
+            if (args.Author.IsBot)
+            {
+                return;
+            }
 
-            if (await botMain.IsUserModerator(args.Author) == IsModerator.Yes) { return; }
+            if (await botMain.IsUserModerator(args.Author) == IsModerator.Yes)
+            {
+                return;
+            }
 
-            if (await botMain.IsUserExemptFromSpamFilter(args.Author) == IsExemptFromSpamFilter.Yes) { return; }
+            if (await botMain.IsUserExemptFromSpamFilter(args.Author) == IsExemptFromSpamFilter.Yes)
+            {
+                return;
+            }
 
             if (botMain.Config.InvitesAllowedOnChannels.Contains(args.Channel.Id)
-                && TextContainsInvite(args.Message.Content)) { return; }
+                && TextContainsInvite(args.Message.Content))
+            {
+                return;
+            }
 
             //if (args.Channel.Id != botMain.Config.SpamReportChannel) { return; }
 
@@ -180,8 +213,8 @@ public class MessageDeleters : IDisposable
             char[] whitespace = new[] { '\n', '\t', '\r', ' ' }.Concat(messageContentToTest.Where(char.IsWhiteSpace))
                                                                .Distinct()
                                                                .ToArray();
-            string[]  messageContentSplit = messageContentToTest.Split(whitespace);
-            var       sw                  = Stopwatch.StartNew();
+            string[] messageContentSplit = messageContentToTest.Split(whitespace);
+            var      sw                  = Stopwatch.StartNew();
             (string InText, string InFilter, float Weight)[] hits = messageContentSplit
                                                                     .Where(s1 => !string.IsNullOrWhiteSpace(s1))
                                                                     .Select(s1 => botMain.Config.SpamSubstrings
@@ -190,9 +223,10 @@ public class MessageDeleters : IDisposable
                                                                                             .Calculate(s1,
                                                                                                 s2
                                                                                                     .Substring)
-                                                                                        <= s2.MaxDistance)
+                                                                                        <= s2
+                                                                                            .MaxDistance)
                                                                                 is var (substring, _, weight)
-                                                                                      ? (s1, substring, weight)
+                                                                                ? (s1, substring, weight)
                                                                                 : ("", "", 0.0f))
                                                                     .Cast<(string InText, string InFilter, float Weight
                                                                         )>()
@@ -239,7 +273,10 @@ public class MessageDeleters : IDisposable
     {
         async Task Delete(Task<IsModerator> t)
         {
-            if (t.Result == IsModerator.No) { await msg.DeleteAsync(); }
+            if (t.Result == IsModerator.No)
+            {
+                await msg.DeleteAsync();
+            }
         }
 
         return botMain.IsUserModerator(msg.Author).ContinueWith(Delete);

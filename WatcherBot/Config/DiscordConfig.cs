@@ -6,7 +6,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace WatcherBot.Config;
 
-public record DiscordConfig
+public class DiscordConfig
 {
     public readonly ImmutableHashSet<DiscordRole> ModeratorRoles;
     public readonly DiscordGuild OutputGuild;

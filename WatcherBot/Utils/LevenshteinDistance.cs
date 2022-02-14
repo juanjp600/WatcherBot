@@ -1,5 +1,4 @@
-﻿#nullable enable
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Barotrauma;
 
@@ -16,15 +15,24 @@ public static class LevenshteinDistance
         int n = s.Length;
         int m = t.Length;
 
-        if (n == 0 || m == 0) { return Math.Max(n, m); }
+        if (n == 0 || m == 0)
+        {
+            return Math.Max(n, m);
+        }
 
         Span<int> d = stackalloc int[(n + 1) * (m + 1)];
 
         int CalcIndex(int x, int y) => y * (n + 1) + x;
 
-        for (var i = 0; i <= n; i++) { d[CalcIndex(i, 0)] = i; }
+        for (var i = 0; i <= n; i++)
+        {
+            d[CalcIndex(i, 0)] = i;
+        }
 
-        for (var j = 0; j <= m; j++) { d[CalcIndex(0, j)] = j; }
+        for (var j = 0; j <= m; j++)
+        {
+            d[CalcIndex(0, j)] = j;
+        }
 
         for (var i = 1; i <= n; i++)
         for (var j = 1; j <= m; j++)
@@ -40,7 +48,10 @@ public static class LevenshteinDistance
 
     public static (int Index, int Length, int Distance)? FindSubstr(string str, string substr, int maxDistance)
     {
-        if (str.IndexOf(substr, StringComparison.Ordinal) is int val and > 0) { return (val, substr.Length, 0); }
+        if (str.IndexOf(substr, StringComparison.Ordinal) is int val and > 0)
+        {
+            return (val, substr.Length, 0);
+        }
 
         int foundIndex    = -1;
         int foundLength   = -1;
@@ -52,7 +63,10 @@ public static class LevenshteinDistance
         {
             ReadOnlySpan<char> subStrToTest = str.AsSpan(j, testLength);
             int                distance     = Calculate(subStrToTest, substr);
-            if (distance > maxDistance || foundDistance >= 0 && distance >= foundDistance) { continue; }
+            if (distance > maxDistance || foundDistance >= 0 && distance >= foundDistance)
+            {
+                continue;
+            }
 
             foundIndex    = j;
             foundLength   = testLength;
@@ -62,15 +76,8 @@ public static class LevenshteinDistance
         return foundIndex >= 0 ? (foundIndex, foundLength, foundDistance) : null;
     }
 
-    public readonly struct EqualityComparer : IEqualityComparer<string>
+    public record struct EqualityComparer(int MaxDistance) : IEqualityComparer<string>
     {
-        public readonly int MaxDistance;
-
-        public EqualityComparer(int maxDistance)
-        {
-            MaxDistance = maxDistance;
-        }
-
         public bool Equals(string? x, string? y)
             => Calculate(x ?? "", y ?? "") <= MaxDistance;
 

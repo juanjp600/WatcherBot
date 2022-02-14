@@ -14,6 +14,9 @@ public static class Reflection
                                                                null)
                                                   .Select(mi => mi as FieldInfo);
 
-        foreach (FieldInfo? fi in x) { fi?.SetValue(subclass, fi.GetValue(superclass)); }
+        foreach (FieldInfo? fi in x)
+        {
+            fi?.SetValue(subclass, fi.GetValue(superclass));
+        }
     }
 }

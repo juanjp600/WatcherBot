@@ -132,7 +132,7 @@ public class BotMain : IDisposable
     {
         DiscordGuild  guild     = DiscordConfig.OutputGuild;
         DiscordMember guildUser = user is DiscordMember rgu ? rgu : await guild.GetMemberAsync(user.Id);
-        guildUser.ReplaceRolesAsync(guildUser.Roles.Concat(new[] { MutedRole }), reason);
+        await guildUser.ReplaceRolesAsync(guildUser.Roles.Concat(new[] { MutedRole }), reason);
     }
 
     private Task HandleCommand(DiscordClient sender, MessageCreateEventArgs args)
