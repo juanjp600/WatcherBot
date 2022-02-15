@@ -33,6 +33,8 @@ public class Config
 
     public readonly ImmutableHashSet<(string Substring, int MaxDistance, float Weight)> SpamSubstrings;
 
+    public readonly string YeensayMaskPath;
+
     public Config(IConfigurationBuilder builder)
     {
         Configuration = builder.Build();
@@ -78,6 +80,8 @@ public class Config
         SpamReportChannel       = Configuration.GetSection("SpamReportChannel").Get<ulong>();
         SpamFilterExemptionRole = Configuration.GetSection("SpamFilterExemptionRole").Get<ulong>();
         MutedRole               = Configuration.GetSection("MutedRole").Get<ulong>();
+
+        YeensayMaskPath = Configuration.GetSection("YeensayMaskPath").Get<string>();
     }
 
     public static Config DefaultConfig() =>
