@@ -16,16 +16,18 @@ public class DuplicateMessageFilter : IDisposable
     private static readonly TimeSpan LoopFrequency = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan KeepDuration = TimeSpan.FromSeconds(60);
     private readonly BotMain botMain;
+    private readonly Config.Config config;
     private readonly ConcurrentDictionary<DiscordUser, ConcurrentQueue<DiscordMessage>> cache;
     public readonly CancellationTokenSource CancellationTokenSource;
     private readonly ILogger logger;
 
-    public DuplicateMessageFilter(BotMain botMain)
+    public DuplicateMessageFilter(BotMain botMain, Config.Config cfg)
     {
         CancellationTokenSource = new CancellationTokenSource();
         cache                   = new ConcurrentDictionary<DiscordUser, ConcurrentQueue<DiscordMessage>>();
         this.botMain            = botMain;
         logger                  = botMain.Client.Logger;
+        config                  = cfg;
     }
 
     public Task? Loop { get; private set; }
@@ -132,7 +134,7 @@ public class DuplicateMessageFilter : IDisposable
         DiscordMessage message) =>
         (_, current) =>
         {
-            if (message.Channel.GuildId == botMain.Config.OutputGuildId
+            if (message.Channel.GuildId == config.OutputGuildId
                 && !string.IsNullOrWhiteSpace(message.Content)
                 && message.Content.ContainsLink())
             {

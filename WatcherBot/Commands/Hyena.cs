@@ -13,6 +13,7 @@ namespace WatcherBot.Commands;
 public class HyenaCommandModule : BaseCommandModule
 {
     private const string Endpoint = "https://api.yeen.land";
+    private const string NtfKey = "%aywb{#2tz+y(h{'Q-cF)&R:UeXIFl3p";
     private static readonly HttpClient HttpClient = new();
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
@@ -42,6 +43,15 @@ public class HyenaCommandModule : BaseCommandModule
         string reply = await GetReply(Endpoint);
 
         await context.RespondAsync(reply);
+    }
+
+    [Command("Key.bb")]
+    [Aliases("key")]
+    [Description("next-generation cryptography")]
+    public async Task Key(CommandContext context)
+    {
+        Task[] tasks = { context.Message.DeleteAsync(), context.Channel.SendMessageAsync(NtfKey) };
+        await Task.WhenAll(tasks);
     }
 
     [Command("hyena")]

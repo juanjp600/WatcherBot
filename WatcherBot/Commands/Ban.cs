@@ -5,6 +5,7 @@ using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using WatcherBot.Config;
 using WatcherBot.Utils;
 
@@ -14,10 +15,15 @@ namespace WatcherBot.Commands;
 public class BanCommandModule : BaseCommandModule
 {
     private readonly BotMain botMain;
+    private readonly Config.Config config;
 
-    public BanCommandModule(BotMain bm) => botMain = bm;
+    public BanCommandModule(BotMain bm, IOptions<Config.Config> cfg)
+    {
+        botMain = bm;
+        config  = cfg.Value;
+    }
 
-    private BanTemplate BanTemplate => botMain.Config.BanTemplate;
+    private BanTemplate BanTemplate => config.BanTemplate;
 
     private async Task BanMember(
         CommandContext context,

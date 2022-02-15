@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -7,13 +8,16 @@ using DisCatSharp;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Octokit;
 using Serilog;
 using WatcherBot.Config;
 using WatcherBot.Models;
 using WatcherBot.Utils;
+using Range = WatcherBot.Utils.Range;
 
 namespace WatcherBot;
 
@@ -21,7 +25,7 @@ public class BotMain : IDisposable
 {
     public readonly DiscordClient Client;
 
-    internal readonly Config.Config Config;
+    private readonly Config.Config config;
 
     private readonly Lazy<DiscordConfig> discordConfig;
 
@@ -34,43 +38,56 @@ public class BotMain : IDisposable
 
     public BotMain()
     {
-        Config     = WatcherBot.Config.Config.DefaultConfig();
-        Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(Config.Configuration).CreateLogger();
+        IConfigurationRoot configurationRoot = new ConfigurationBuilder()
+                                               .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                                               .Build();
+        ServiceProvider services = new ServiceCollection()
+                                   .AddSingleton(this)
+                                   .AddOptions()
+                                   .Configure<Config.Config>(configurationRoot.GetSection(Config.Config.ConfigSection),
+                                                             binder => binder.BindNonPublicProperties = true)
+                                   .BuildServiceProvider();
+
+        config     = services.GetRequiredService<IOptions<Config.Config>>().Value;
+        foreach ((ulong key, Range value) in config.AttachmentLimits)
+        {
+            Console.WriteLine($"{key}: {value}");
+        }
+        Environment.Exit(0);
+        Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(configurationRoot).CreateLogger();
 
         Log.Logger.Information("Starting bot");
         shutdownRequest = new CancellationTokenSource();
 
         //GitHub API
         GitHubClient = new GitHubClient(new ProductHeaderValue("WatcherBot"));
-        var gitHubCredentials = new Credentials(Config.GitHubToken);
+        var gitHubCredentials = new Credentials(config.GitHubToken);
         GitHubClient.Credentials = gitHubCredentials;
         GitHubClient.SetRequestTimeout(TimeSpan.FromSeconds(5));
 
         //Discord API
-        var config = new DiscordConfiguration
+        var discordConfiguration = new DiscordConfiguration
         {
-            Token         = Config.DiscordApiToken,
+            Token         = config.DiscordApiToken,
             TokenType     = TokenType.Bot,
             Intents       = DiscordIntents.AllUnprivileged,
             AutoReconnect = true,
             LoggerFactory = new LoggerFactory().AddSerilog(Log.Logger),
         };
-        Client = new DiscordClient(config);
+        Client = new DiscordClient(discordConfiguration);
 
-        discordConfig         =  new Lazy<DiscordConfig>(() => new DiscordConfig(Config, Client));
+        discordConfig         =  new Lazy<DiscordConfig>(() => new DiscordConfig(config, Client));
         Client.MessageCreated += HandleCommand;
-        MessageDeleters deleters = new(this);
+        MessageDeleters deleters = new(this, config);
         Client.MessageCreated += deleters.ContainsDisallowedInvite;
         Client.MessageCreated += deleters.DeleteCringeMessages;
         Client.MessageCreated += deleters.MessageWithinAttachmentLimits;
         Client.MessageCreated += deleters.ProhibitFormattingFromUsers;
         Client.MessageCreated += deleters.DeletePotentialSpam;
 
-        duplicateMessageFilter =  new DuplicateMessageFilter(this);
+        duplicateMessageFilter =  new DuplicateMessageFilter(this, config);
         Client.MessageCreated  += duplicateMessageFilter.MessageCreated;
         duplicateMessageFilter.Start();
-
-        ServiceProvider services = new ServiceCollection().AddSingleton(this).BuildServiceProvider();
 
         CommandsNextConfiguration commandsConfig = new()
         {
@@ -91,9 +108,9 @@ public class BotMain : IDisposable
 
     public DiscordConfig DiscordConfig => discordConfig.Value;
 
-    public DiscordChannel SpamReportChannel => DiscordConfig.OutputGuild.Channels[Config.SpamReportChannel];
+    public DiscordChannel SpamReportChannel => DiscordConfig.OutputGuild.Channels[config.SpamReportChannel];
 
-    public DiscordRole MutedRole => DiscordConfig.OutputGuild.Roles[Config.MutedRole];
+    public DiscordRole MutedRole => DiscordConfig.OutputGuild.Roles[config.MutedRole];
 
     public void Dispose()
     {
@@ -123,7 +140,7 @@ public class BotMain : IDisposable
     {
         DiscordGuild  guild     = DiscordConfig.OutputGuild;
         DiscordMember guildUser = user is DiscordMember rgu ? rgu : await guild.GetMemberAsync(user.Id);
-        return guildUser.Roles.Any(r => r.Id == Config.SpamFilterExemptionRole)
+        return guildUser.Roles.Any(r => r.Id == config.SpamFilterExemptionRole)
                    ? IsExemptFromSpamFilter.Yes
                    : IsExemptFromSpamFilter.No;
     }
@@ -137,7 +154,7 @@ public class BotMain : IDisposable
 
     private Task HandleCommand(DiscordClient sender, MessageCreateEventArgs args)
     {
-        if (!Config.ProhibitCommandsFromUsers.Contains(args.Author.Id))
+        if (!config.ProhibitCommandsFromUsers.Contains(args.Author.Id))
         {
             return (typeof(CommandsNextExtension).GetMethod("HandleCommandsAsync",
                                                             BindingFlags.Instance | BindingFlags.NonPublic)!
