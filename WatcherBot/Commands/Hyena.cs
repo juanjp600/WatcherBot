@@ -20,6 +20,7 @@ public class HyenaCommandModule : BaseCommandModule
 {
     private const string Endpoint = "https://api.yeen.land";
     private static readonly HttpClient HttpClient = new();
+    private readonly BotMain botMain;
 
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
@@ -28,6 +29,7 @@ public class HyenaCommandModule : BaseCommandModule
 
     public HyenaCommandModule(BotMain bm)
     {
+        botMain = bm;
         MaskPath = bm.Config.YeensayMaskPath;
     }
 
@@ -73,6 +75,8 @@ public class HyenaCommandModule : BaseCommandModule
     [Description("what the yeen say")]
     public async Task HyenaSay(CommandContext context)
     {
+        Task<IsModerator> isModeratorTask = botMain.IsUserModerator(context.Member);
+    
         HyenaUrl? url = await QueryApi(Endpoint);
 
         if (url is null)
@@ -98,7 +102,15 @@ public class HyenaCommandModule : BaseCommandModule
         memoryStream.Position = 0;
 
         DiscordMessageBuilder builder = new DiscordMessageBuilder().WithFile("yeensay.png", memoryStream);
-        Task[]                tasks   = { context.Message.DeleteAsync(), context.Channel.SendMessageAsync(builder) };
+        IsModerator isModerator = await isModeratorTask;
+        
+        Task[] tasks =
+        {
+            context.Message.DeleteAsync(),
+            isModerator == IsModerator.Yes || context.Guild.Id != botMain.Config.OutputGuildId
+                ? context.Channel.SendMessageAsync(builder)
+                : Bezos(context)
+        };
         await Task.WhenAll(tasks);
     }
 
