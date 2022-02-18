@@ -8,19 +8,19 @@ public class Templates
     public string Ban { get; }
     public string Timeout { get; }
 
-    private string DefaultAppealRecipent;
+    private readonly string defaultAppealRecipent;
 
     private Templates(string ban, string timeout, string defaultAppealRecipent) {
         Ban = ban;
         Timeout = timeout;
-        DefaultAppealRecipent = defaultAppealRecipent;
+        this.defaultAppealRecipent = defaultAppealRecipent;
     }
 
     public string GetAppealRecipients(string otherName, Anonymous anon) {
-        if (anon == Anonymous.Yes || otherName == DefaultAppealRecipent) {
-            return DefaultAppealRecipent;
+        if (anon == Anonymous.Yes || otherName == defaultAppealRecipent) {
+            return defaultAppealRecipent;
         } else {
-            return $"{otherName} or {DefaultAppealRecipent}";
+            return $"{otherName} or {defaultAppealRecipent}";
         }
     }
 
