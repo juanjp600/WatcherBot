@@ -5,8 +5,8 @@ namespace WatcherBot.Utils;
 
 public class Templates
 {
-    public string Ban { get; }
-    public string Timeout { get; }
+    public readonly string Ban;
+    public readonly string Timeout;
 
     private readonly string defaultAppealRecipent;
 
@@ -27,7 +27,7 @@ public class Templates
     public static Templates FromConfig(Config.Config config)
     {
         var section = config.Configuration.GetSection("Templates");
-        Func<string, string> arrSecToStr = (key) => string.Join("\n", section.GetSection(key).Get<string[]>());
+        string arrSecToStr(string key) => string.Join("\n", section.GetSection(key).Get<string[]>());
         return new Templates(arrSecToStr("Ban"), arrSecToStr("Timeout"), section.GetSection("DefaultAppeal").Get<string>());
     }
 }
