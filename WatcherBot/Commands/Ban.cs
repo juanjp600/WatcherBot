@@ -5,7 +5,6 @@ using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
 using Microsoft.Extensions.Logging;
-using WatcherBot.Config;
 using WatcherBot.Utils;
 
 namespace WatcherBot.Commands;
@@ -27,15 +26,6 @@ public class BanCommandModule : BaseCommandModule
     {
         context.Client.Logger.LogInformation($"Banning {member.Mention} with reason {reason}");
 
-        try { await botMain.DiscordConfig.OutputGuild.BanMemberAsync(member, reason: reason); }
-        catch (Exception e)
-        {
-            context.Client.Logger.LogError($"Error banning {member.Mention}: {e}");
-            await context.Message.Channel
-                .SendMessageAsync($"Error banning {member.UsernameWithDiscriminator}: {(e.InnerException ?? e).Message}");
-            return;
-        }
-
         string banMsg = Templates.Ban.Replace("[reason]", reason ?? "No reason provided")
                                      .Replace("[banner]", Templates.GetAppealRecipients(context.User.UsernameWithDiscriminator, anon));
 
@@ -46,7 +36,17 @@ public class BanCommandModule : BaseCommandModule
             appeal = $"The message sent was the following:\n{banMsg}";
             context.Client.Logger.LogDebug($"Sent banned user {member.Mention} DM");
         }
-        catch { context.Client.Logger.LogWarning("Failed to send DM to banned user"); }
+        catch (Exception e) { context.Client.Logger.LogWarning($"Failed to send DM to banned user: {e}"); }
+
+        try { await member.BanAsync(reason: reason); }
+        catch (Exception e)
+        {
+            context.Client.Logger.LogError($"Error banning {member.Mention}: {e}");
+            await context.Message.Channel
+                .SendMessageAsync($"Error banning {member.UsernameWithDiscriminator}: {(e.InnerException ?? e).Message}");
+            return;
+        }
+
         await context.Message.Channel.SendMessageAsync($"{member.Mention} has been banned. {appeal}");
     }
 
