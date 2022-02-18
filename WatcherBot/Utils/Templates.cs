@@ -16,13 +16,10 @@ public class Templates
         this.defaultAppealRecipent = defaultAppealRecipent;
     }
 
-    public string GetAppealRecipients(string otherName, Anonymous anon) {
-        if (anon == Anonymous.Yes || otherName == defaultAppealRecipent) {
-            return defaultAppealRecipent;
-        } else {
-            return $"{otherName} or {defaultAppealRecipent}";
-        }
-    }
+    public string GetAppealRecipients(string otherName, Anonymous anon)
+        => anon == Anonymous.Yes || otherName == defaultAppealRecipent
+            ? defaultAppealRecipent
+            : $"{otherName} or {defaultAppealRecipent}";
 
     public static Templates FromConfig(Config.Config config)
     {
