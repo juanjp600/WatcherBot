@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -17,7 +16,6 @@ using Serilog;
 using WatcherBot.Config;
 using WatcherBot.Models;
 using WatcherBot.Utils;
-using Range = WatcherBot.Utils.Range;
 
 namespace WatcherBot;
 
@@ -39,7 +37,7 @@ public class BotMain : IDisposable
     public BotMain()
     {
         IConfigurationRoot configurationRoot = new ConfigurationBuilder()
-                                               .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                                               .AddJsonFile("appsettings.json", false, false)
                                                .Build();
         ServiceProvider services = new ServiceCollection()
                                    .AddSingleton(this)
@@ -48,10 +46,25 @@ public class BotMain : IDisposable
                                                              binder => binder.BindNonPublicProperties = true)
                                    .BuildServiceProvider();
 
-        config     = services.GetRequiredService<IOptions<Config.Config>>().Value;
-        foreach ((ulong key, Range value) in config.AttachmentLimits)
+        config = services.GetRequiredService<IOptions<Config.Config>>().Value;
         {
-            Console.WriteLine($"{key}: {value}");
+            Console.WriteLine(config.DiscordApiToken);
+            Console.WriteLine(config.GitHubToken);
+            Console.WriteLine(config.OutputGuildId);
+            Console.WriteLine(string.Join(", ", config.ModeratorRoleIds));
+            Console.WriteLine(string.Join("", config.FormattingCharacters));
+            Console.WriteLine(string.Join(", ", config.ProhibitCommandsFromUsers));
+            Console.WriteLine(string.Join(", ", config.InvitesAllowedOnChannels));
+            Console.WriteLine(string.Join(", ", config.InvitesAllowedOnServers));
+            Console.WriteLine(string.Join(", ", config.CringeChannels));
+            Console.WriteLine(string.Join(", ", config.AttachmentLimits));
+            Console.WriteLine($"{config.BanTemplate.Template}\n{config.BanTemplate.DefaultAppeal}");
+            Console.WriteLine(string.Join("; ", config.SpamSubstrings));
+            Console.WriteLine(string.Join(", ", config.KnownSafeSubstrings));
+            Console.WriteLine(config.MutedRole);
+            Console.WriteLine(string.Join(", ", config.ProhibitFormattingFromUsers));
+            Console.WriteLine(config.SpamFilterExemptionRole);
+            Console.WriteLine(config.SpamReportChannel);
         }
         Environment.Exit(0);
         Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(configurationRoot).CreateLogger();
@@ -168,7 +181,10 @@ public class BotMain : IDisposable
     public async Task MainAsync()
     {
         await Client.ConnectAsync();
-        while (!shutdownRequest.IsCancellationRequested) { await Task.Delay(1000); }
+        while (!shutdownRequest.IsCancellationRequested)
+        {
+            await Task.Delay(1000);
+        }
 
         await Client.UpdateStatusAsync(null, UserStatus.Offline);
         await Client.DisconnectAsync();
