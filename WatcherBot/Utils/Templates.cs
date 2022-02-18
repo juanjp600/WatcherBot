@@ -12,8 +12,11 @@ public record Templates(string Ban, string Timeout, string DefaultAppealRecipien
 
     public static Templates FromConfig(Config.Config config)
     {
-        var section = config.Configuration.GetSection("Templates");
+        var section = config.Configuration.GetSection(nameof(Templates));
         string arrSecToStr(string key) => string.Join("\n", section.GetSection(key).Get<string[]>());
-        return new Templates(arrSecToStr("Ban"), arrSecToStr("Timeout"), section.GetSection("DefaultAppeal").Get<string>());
+        return new Templates(
+            Ban: arrSecToStr(nameof(Ban)),
+            Timeout: arrSecToStr(nameof(Timeout)),
+            DefaultAppealRecipient: section.GetSection(nameof(DefaultAppealRecipient)).Get<string>());
     }
 }
