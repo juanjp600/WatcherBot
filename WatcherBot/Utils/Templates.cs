@@ -3,23 +3,12 @@ using System;
 
 namespace WatcherBot.Utils;
 
-public class Templates
+public record Templates(string Ban, string Timeout, string DefaultAppealRecipient)
 {
-    public readonly string Ban;
-    public readonly string Timeout;
-
-    private readonly string defaultAppealRecipent;
-
-    private Templates(string ban, string timeout, string defaultAppealRecipent) {
-        Ban = ban;
-        Timeout = timeout;
-        this.defaultAppealRecipent = defaultAppealRecipent;
-    }
-
     public string GetAppealRecipients(string otherName, Anonymous anon)
-        => anon == Anonymous.Yes || otherName == defaultAppealRecipent
-            ? defaultAppealRecipent
-            : $"{otherName} or {defaultAppealRecipent}";
+        => anon == Anonymous.Yes || otherName == DefaultAppealRecipient
+            ? DefaultAppealRecipient
+            : $"{otherName} or {DefaultAppealRecipient}";
 
     public static Templates FromConfig(Config.Config config)
     {
