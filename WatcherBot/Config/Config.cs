@@ -4,13 +4,14 @@ using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Range = WatcherBot.Utils.Range;
+using WatcherBot.Utils;
 
 namespace WatcherBot.Config;
 
 public class Config
 {
     public readonly ImmutableDictionary<ulong, Range> AttachmentLimits;
-    public readonly BanTemplate BanTemplate;
+    public readonly Templates Templates;
     public readonly IConfigurationRoot Configuration;
 
     public readonly ImmutableHashSet<ulong> CringeChannels;
@@ -43,7 +44,7 @@ public class Config
         OutputGuildId   = Configuration.GetSection("Target").Get<ulong>();
         DiscordApiToken = Configuration.GetSection("Token").Get<string>();
 
-        BanTemplate = BanTemplate.FromConfig(this);
+        Templates = Templates.FromConfig(this);
 
         //Cruelty :)
         CringeChannels       = Configuration.GetSection("CringeChannels").Get<ulong[]>().ToImmutableHashSet();
