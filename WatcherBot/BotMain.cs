@@ -83,6 +83,7 @@ public class BotMain : IDisposable
         CommandsNextExtension commands = Client.UseCommandsNext(commandsConfig);
         commands.CommandExecuted += Logging.Logging.CommandExecuted;
         commands.CommandErrored  += Logging.Logging.CommandErrored;
+        commands.RegisterConverter(new DateTimeConverter());
         commands.RegisterCommands(Assembly.GetAssembly(typeof(BotMain)));
 
         // Database
