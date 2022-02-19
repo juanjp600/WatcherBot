@@ -15,7 +15,7 @@ public class DiscordConfig
     {
         DiscordGuild outputGuild = client.GetGuildAsync(config.OutputGuildId).Result;
         OutputGuild = outputGuild;
-        ModeratorRoles = (from id in config.Configuration.GetSection("ModeratorRoles").Get<ulong[]>()
+        ModeratorRoles = (from id in config.ModeratorRoleIds
                           let role = outputGuild.Roles[id]
                           where role is not null
                           select role).ToImmutableHashSet();

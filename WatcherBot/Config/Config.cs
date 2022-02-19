@@ -47,37 +47,30 @@ public class Config
         Templates = Templates.FromConfig(this);
 
         //Cruelty :)
-        CringeChannels       = Configuration.GetSection("CringeChannels").Get<ulong[]>().ToImmutableHashSet();
+        IEnumerable<T> getOrEmpty<T>(string value)
+            => Configuration.GetSection(value).Get<T[]>() ?? Enumerable.Empty<T>();
+
+        CringeChannels       = getOrEmpty<ulong>("CringeChannels").ToImmutableHashSet();
         FormattingCharacters = Configuration.GetSection("FormattingCharacters").Get<string>().ToImmutableHashSet();
-        InvitesAllowedOnChannels =
-            Configuration.GetSection("InvitesAllowedOnChannels").Get<ulong[]>().ToImmutableHashSet();
-        InvitesAllowedOnServers =
-            Configuration.GetSection("InvitesAllowedOnServers").Get<ulong[]>().ToImmutableHashSet();
-        ModeratorRoleIds = Configuration.GetSection("ModeratorRoles").Get<ulong[]>().ToImmutableHashSet();
+        InvitesAllowedOnChannels = getOrEmpty<ulong>("InvitesAllowedOnChannels").ToImmutableHashSet();
+        InvitesAllowedOnServers = getOrEmpty<ulong>("InvitesAllowedOnServers").ToImmutableHashSet();
+        ModeratorRoleIds = getOrEmpty<ulong>("ModeratorRoles").ToImmutableHashSet();
         AttachmentLimits = Configuration.GetSection("AttachmentLimits")
                                         .GetChildren()
                                         .ToImmutableDictionary(c => ulong.Parse(c.Key),
                                                                c => new Range(c.Get<string>()));
-        ProhibitCommandsFromUsers =
-            (Configuration.GetSection("ProhibitCommandsFromUsers").Get<ulong[]>() ?? Enumerable.Empty<ulong>())
-            .ToImmutableHashSet();
-        ProhibitFormattingFromUsers =
-            (Configuration.GetSection("ProhibitFormattingFromUsers").Get<ulong[]>() ?? Enumerable.Empty<ulong>())
-            .ToImmutableHashSet();
+        ProhibitCommandsFromUsers = getOrEmpty<ulong>("ProhibitCommandsFromUsers").ToImmutableHashSet();
+        ProhibitFormattingFromUsers = getOrEmpty<ulong>("ProhibitFormattingFromUsers").ToImmutableHashSet();
 
         //Spam detection
-        IEnumerable<string> spamSubstrs = Configuration.GetSection("SpamSubstrings").Get<string[]>()
-                                          ?? Enumerable.Empty<string>();
-        IEnumerable<int> spamSubstrMaxDist =
-            Configuration.GetSection("SpamSubstringMaxDist").Get<int[]>() ?? Enumerable.Empty<int>();
-        IEnumerable<float> spamSubstrWeights =
-            Configuration.GetSection("SpamSubstringWeights").Get<float[]>() ?? Enumerable.Empty<float>();
+        IEnumerable<string> spamSubstrs = getOrEmpty<string>("SpamSubstrings");
+        IEnumerable<int> spamSubstrMaxDist = getOrEmpty<int>("SpamSubstringMaxDist");
+        IEnumerable<float> spamSubstrWeights = getOrEmpty<float>("SpamSubstringWeights");
         SpamSubstrings = spamSubstrs.Zip(spamSubstrMaxDist, (s,  d) => (s, d))
                                     .Zip(spamSubstrWeights, (sd, w) => (sd.s, sd.d, w))
                                     .ToImmutableHashSet();
         Console.WriteLine(string.Join(", ", SpamSubstrings));
-        KnownSafeSubstrings = (Configuration.GetSection("KnownSafeSubstrings").Get<string[]>()
-                               ?? Enumerable.Empty<string>()).ToImmutableHashSet();
+        KnownSafeSubstrings = getOrEmpty<string>("KnownSafeSubstrings").ToImmutableHashSet();
         SpamReportChannel       = Configuration.GetSection("SpamReportChannel").Get<ulong>();
         SpamFilterExemptionRole = Configuration.GetSection("SpamFilterExemptionRole").Get<ulong>();
         MutedRole               = Configuration.GetSection("MutedRole").Get<ulong>();
