@@ -5,14 +5,16 @@ using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Range = WatcherBot.Utils.Range;
 using WatcherBot.Utils;
+using Serilog;
 
 namespace WatcherBot.Config;
 
 public class Config
 {
+    private readonly IConfigurationRoot Configuration;
+
     public readonly ImmutableDictionary<ulong, Range> AttachmentLimits;
     public readonly Templates Templates;
-    public readonly IConfigurationRoot Configuration;
 
     public readonly ImmutableHashSet<ulong> CringeChannels;
     public readonly string DiscordApiToken;
@@ -44,7 +46,12 @@ public class Config
         OutputGuildId   = Configuration.GetSection("Target").Get<ulong>();
         DiscordApiToken = Configuration.GetSection("Token").Get<string>();
 
-        Templates = Templates.FromConfig(this);
+        var templatesSection = Configuration.GetSection(nameof(Templates));
+        string arrSecToStr(string key) => string.Join("\n", templatesSection.GetSection(key).Get<string[]>());
+        Templates = new Templates(
+            Ban: arrSecToStr(nameof(Templates.Ban)),
+            Timeout: arrSecToStr(nameof(Templates.Timeout)),
+            DefaultAppealRecipient: templatesSection.GetSection(nameof(Templates.DefaultAppealRecipient)).Get<string>());
 
         //Cruelty :)
         IEnumerable<T> getOrEmpty<T>(string value)
@@ -77,6 +84,9 @@ public class Config
 
         YeensayMaskPath = Configuration.GetSection("YeensayMaskPath").Get<string>();
     }
+
+    public ILogger CreateLogger()
+        => new LoggerConfiguration().ReadFrom.Configuration(Configuration).CreateLogger();
 
     public static Config DefaultConfig() =>
         new(new ConfigurationBuilder().AddJsonFile("appsettings.json", false, false));

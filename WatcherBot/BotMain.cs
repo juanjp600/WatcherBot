@@ -35,8 +35,8 @@ public class BotMain : IDisposable
     public BotMain()
     {
         Config     = WatcherBot.Config.Config.DefaultConfig();
-        Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(Config.Configuration).CreateLogger();
 
+        Log.Logger = Config.CreateLogger();
         Log.Logger.Information("Starting bot");
         shutdownRequest = new CancellationTokenSource();
 
