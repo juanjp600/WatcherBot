@@ -16,6 +16,8 @@ public class Config
     public readonly ImmutableDictionary<ulong, Range> AttachmentLimits;
     public readonly Templates Templates;
 
+    public readonly IImmutableDictionary<ulong, ulong> GuildToLogChannel;
+
     public readonly ImmutableHashSet<ulong> CringeChannels;
     public readonly string DiscordApiToken;
     public readonly ImmutableHashSet<char> FormattingCharacters;
@@ -52,6 +54,8 @@ public class Config
             Ban: arrSecToStr(nameof(Templates.Ban)),
             Timeout: arrSecToStr(nameof(Templates.Timeout)),
             DefaultAppealRecipient: templatesSection.GetSection(nameof(Templates.DefaultAppealRecipient)).Get<string>());
+
+        GuildToLogChannel = Configuration.GetSection("LogChannels").GetChildren().ToImmutableDictionary(c => ulong.Parse(c.Key), c => ulong.Parse(c.Value));
 
         //Cruelty :)
         IEnumerable<T> getOrEmpty<T>(string value)

@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Octokit;
 using Serilog;
 using WatcherBot.Config;
+using WatcherBot.Logging;
 using WatcherBot.Models;
 using WatcherBot.Utils;
 
@@ -51,7 +52,7 @@ public class BotMain : IDisposable
         {
             Token         = Config.DiscordApiToken,
             TokenType     = TokenType.Bot,
-            Intents       = DiscordIntents.AllUnprivileged,
+            Intents       = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMembers,
             AutoReconnect = true,
             LoggerFactory = new LoggerFactory().AddSerilog(Log.Logger),
         };
@@ -65,6 +66,11 @@ public class BotMain : IDisposable
         Client.MessageCreated += deleters.MessageWithinAttachmentLimits;
         Client.MessageCreated += deleters.ProhibitFormattingFromUsers;
         Client.MessageCreated += deleters.DeletePotentialSpam;
+
+        DiscordLogger logger = new(this);
+        Client.MessageDeleted += logger.DeletedMessage;
+        Client.GuildMemberAdded += logger.Join;
+        Client.GuildMemberRemoved += logger.Leave;
 
         duplicateMessageFilter =  new DuplicateMessageFilter(this);
         Client.MessageCreated  += duplicateMessageFilter.MessageCreated;
