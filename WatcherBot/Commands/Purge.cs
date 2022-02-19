@@ -19,8 +19,6 @@ public class PurgeCommandModule : BaseCommandModule
     [RequirePermissionInGuild(Permissions.ManageMessages)]
     [RequireModeratorRoleInGuild]
     public async Task Purge(CommandContext context, DiscordMessage msg, int count = 1024, [RemainingText] string? reason = null) {
-        context.Client.Logger.LogInformation(msg.Content);
-
         Func<ulong, int, Task<IReadOnlyList<DiscordMessage>>> getMessages
             = count < 0 ? msg.Channel.GetMessagesBeforeAsync : msg.Channel.GetMessagesAfterAsync;
         IEnumerable<DiscordMessage> messages = await getMessages(msg.Id, Math.Abs(count) - 1);
