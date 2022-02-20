@@ -11,6 +11,7 @@ using WatcherBot.Models;
 
 namespace WatcherBot.Utils;
 
+[DiscordEventHandler]
 public class MessageDeleters : IDisposable
 {
     public enum MessageDeletionReason
@@ -42,6 +43,7 @@ public class MessageDeleters : IDisposable
 
     private static bool GeneralCondition(DiscordMessage msg) => !(msg.Author.IsBot || msg.Channel is DiscordDmChannel);
 
+    [DiscordEvent("MessageCreated")]
     public Task ContainsDisallowedInvite(DiscordClient sender, MessageCreateEventArgs args)
     {
         Delete DeletionCondition()
@@ -77,6 +79,7 @@ public class MessageDeleters : IDisposable
         return invites.Any(i => messageContent.Contains(i, StringComparison.OrdinalIgnoreCase));
     }
 
+    [DiscordEvent("MessageCreated")]
     public Task MessageWithinAttachmentLimits(DiscordClient sender, MessageCreateEventArgs args)
     {
         Delete DeletionCondition()
@@ -111,6 +114,7 @@ public class MessageDeleters : IDisposable
         return DeleteMsg(args.Message);
     }
 
+    [DiscordEvent("MessageCreated")]
     public Task ProhibitFormattingFromUsers(DiscordClient sender, MessageCreateEventArgs args)
     {
         if (!GeneralCondition(args.Message)
@@ -126,6 +130,7 @@ public class MessageDeleters : IDisposable
         return DeleteMsg(args.Message);
     }
 
+    [DiscordEvent("MessageCreated")]
     public Task DeleteCringeMessages(DiscordClient sender, MessageCreateEventArgs args)
     {
         Task _ = Task.Run(async () =>
@@ -166,6 +171,7 @@ public class MessageDeleters : IDisposable
         return Task.CompletedTask;
     }
 
+    [DiscordEvent("MessageCreated")]
     public Task DeletePotentialSpam(DiscordClient sender, MessageCreateEventArgs args)
     {
         Task _ = Task.Run(async () =>

@@ -59,24 +59,16 @@ public class BotMain : IDisposable
         Client = new DiscordClient(config);
 
         discordConfig         =  new Lazy<DiscordConfig>(() => new DiscordConfig(Config, Client));
-        Client.MessageCreated += HandleCommand;
-        MessageDeleters deleters = new(this);
-        Client.MessageCreated += deleters.ContainsDisallowedInvite;
-        Client.MessageCreated += deleters.DeleteCringeMessages;
-        Client.MessageCreated += deleters.MessageWithinAttachmentLimits;
-        Client.MessageCreated += deleters.ProhibitFormattingFromUsers;
-        Client.MessageCreated += deleters.DeletePotentialSpam;
-
-        DiscordLogger logger = new(this);
-        Client.MessageDeleted += logger.DeletedMessage;
-        Client.GuildMemberAdded += logger.Join;
-        Client.GuildMemberRemoved += logger.Leave;
-
-        duplicateMessageFilter =  new DuplicateMessageFilter(this);
-        Client.MessageCreated  += duplicateMessageFilter.MessageCreated;
-        duplicateMessageFilter.Start();
 
         ServiceProvider services = new ServiceCollection().AddSingleton(this).BuildServiceProvider();
+
+        EventRegistrar registrar = new(Client, services);
+        registrar.RegisterEventHandlers(Assembly.GetAssembly(typeof(BotMain)) ?? throw new Exception("Failed to get assembly"));
+        registrar.RegisterEventHandler(this);
+
+        duplicateMessageFilter = new DuplicateMessageFilter(this);
+        registrar.RegisterEventHandler(duplicateMessageFilter);
+        duplicateMessageFilter.Start();
 
         CommandsNextConfiguration commandsConfig = new()
         {
@@ -142,6 +134,7 @@ public class BotMain : IDisposable
         await guildUser.ReplaceRolesAsync(guildUser.Roles.Concat(new[] { MutedRole }), reason);
     }
 
+    [DiscordEvent("MessageCreated")]
     private Task HandleCommand(DiscordClient sender, MessageCreateEventArgs args)
     {
         if (!Config.ProhibitCommandsFromUsers.Contains(args.Author.Id))
