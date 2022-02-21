@@ -11,7 +11,7 @@ namespace WatcherBot.Config;
 
 public class Config
 {
-    private readonly IConfigurationRoot Configuration;
+    private readonly IConfigurationRoot configuration;
 
     public readonly ImmutableDictionary<ulong, Range> AttachmentLimits;
     public readonly Templates Templates;
@@ -40,13 +40,13 @@ public class Config
 
     public Config(IConfigurationBuilder builder)
     {
-        Configuration = builder.Build();
+        configuration = builder.Build();
 
-        GitHubToken     = Configuration.GetSection("GitHubToken").Get<string>();
-        OutputGuildId   = Configuration.GetSection("Target").Get<ulong>();
-        DiscordApiToken = Configuration.GetSection("Token").Get<string>();
+        GitHubToken     = configuration.GetSection("GitHubToken").Get<string>();
+        OutputGuildId   = configuration.GetSection("Target").Get<ulong>();
+        DiscordApiToken = configuration.GetSection("Token").Get<string>();
 
-        var templatesSection = Configuration.GetSection(nameof(Templates));
+        var templatesSection = configuration.GetSection(nameof(Templates));
         string arrSecToStr(string key) => string.Join("\n", templatesSection.GetSection(key).Get<string[]>());
         Templates = new Templates(
             Ban: arrSecToStr(nameof(Templates.Ban)),
@@ -55,14 +55,14 @@ public class Config
 
         //Cruelty :)
         IEnumerable<T> getOrEmpty<T>(string value)
-            => Configuration.GetSection(value).Get<T[]>() ?? Enumerable.Empty<T>();
+            => configuration.GetSection(value).Get<T[]>() ?? Enumerable.Empty<T>();
 
         CringeChannels       = getOrEmpty<ulong>("CringeChannels").ToImmutableHashSet();
-        FormattingCharacters = Configuration.GetSection("FormattingCharacters").Get<string>().ToImmutableHashSet();
+        FormattingCharacters = configuration.GetSection("FormattingCharacters").Get<string>().ToImmutableHashSet();
         InvitesAllowedOnChannels = getOrEmpty<ulong>("InvitesAllowedOnChannels").ToImmutableHashSet();
         InvitesAllowedOnServers = getOrEmpty<ulong>("InvitesAllowedOnServers").ToImmutableHashSet();
         ModeratorRoleIds = getOrEmpty<ulong>("ModeratorRoles").ToImmutableHashSet();
-        AttachmentLimits = Configuration.GetSection("AttachmentLimits")
+        AttachmentLimits = configuration.GetSection("AttachmentLimits")
                                         .GetChildren()
                                         .ToImmutableDictionary(c => ulong.Parse(c.Key),
                                                                c => new Range(c.Get<string>()));
@@ -78,15 +78,15 @@ public class Config
                                     .ToImmutableHashSet();
         Console.WriteLine(string.Join(", ", SpamSubstrings));
         KnownSafeSubstrings = getOrEmpty<string>("KnownSafeSubstrings").ToImmutableHashSet();
-        SpamReportChannel       = Configuration.GetSection("SpamReportChannel").Get<ulong>();
-        SpamFilterExemptionRole = Configuration.GetSection("SpamFilterExemptionRole").Get<ulong>();
-        MutedRole               = Configuration.GetSection("MutedRole").Get<ulong>();
+        SpamReportChannel       = configuration.GetSection("SpamReportChannel").Get<ulong>();
+        SpamFilterExemptionRole = configuration.GetSection("SpamFilterExemptionRole").Get<ulong>();
+        MutedRole               = configuration.GetSection("MutedRole").Get<ulong>();
 
-        YeensayMaskPath = Configuration.GetSection("YeensayMaskPath").Get<string>();
+        YeensayMaskPath = configuration.GetSection("YeensayMaskPath").Get<string>();
     }
 
     public ILogger CreateLogger()
-        => new LoggerConfiguration().ReadFrom.Configuration(Configuration).CreateLogger();
+        => new LoggerConfiguration().ReadFrom.Configuration(configuration).CreateLogger();
 
     public static Config DefaultConfig() =>
         new(new ConfigurationBuilder().AddJsonFile("appsettings.json", false, false));
