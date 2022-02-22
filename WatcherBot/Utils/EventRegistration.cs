@@ -9,10 +9,10 @@ namespace WatcherBot.Utils;
 [AttributeUsage(AttributeTargets.Method)]
 public class DiscordEvent : Attribute
 {
-    public readonly string? eventName;
+    public readonly string? EventName;
 
     public DiscordEvent(string? name = null)
-        => eventName = name;
+        => EventName = name;
 }
 
 [AttributeUsage(AttributeTargets.Class)]
@@ -34,7 +34,7 @@ public class EventRegistrar
         var methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
                                .Select(method => (method, attribute: method.GetCustomAttribute<DiscordEvent>()))
                                .Where(m => m.attribute is not null && (m.method.IsStatic || handler is not null))
-                               .Select(m => (m.method, typeof(DiscordClient).GetEvent(m.attribute!.eventName ?? m.method.Name)
+                               .Select(m => (m.method, typeof(DiscordClient).GetEvent(m.attribute!.EventName ?? m.method.Name)
                                    ?? throw new Exception("Event does not exist")));
 
         foreach (var (method, evtn) in methods)
