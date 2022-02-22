@@ -9,7 +9,7 @@ using System;
 
 namespace WatcherBot.Logging;
 
-[DiscordEventHandler]
+[EventHandler]
 public class DiscordLogger
 {
     private readonly BotMain botMain;
@@ -25,7 +25,7 @@ public class DiscordLogger
         return guild.GetChannel(logChannelId);
     }
 
-    [DiscordEvent]
+    [Event]
     public async Task MessageDeleted(DiscordClient client, MessageDeleteEventArgs args)
     {
         DiscordChannel? logChannel = getChannelForGuild(args.Guild);
@@ -69,7 +69,7 @@ public class DiscordLogger
             .WithThumbnail(member.AvatarUrl)
             .WithDescription(member.Mention + " " + member.UsernameWithDiscriminator);
 
-    [DiscordEvent]
+    [Event]
     public async Task GuildMemberAdded(DiscordClient client, GuildMemberAddEventArgs args)
     {
         DiscordChannel? logChannel = getChannelForGuild(args.Guild);
@@ -84,7 +84,7 @@ public class DiscordLogger
         );
     }
 
-    [DiscordEvent]
+    [Event]
     public async Task GuildMemberRemoved(DiscordClient client, GuildMemberRemoveEventArgs args)
     {
         DiscordChannel? logChannel = getChannelForGuild(args.Guild);

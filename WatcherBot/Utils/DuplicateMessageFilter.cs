@@ -142,7 +142,7 @@ public class DuplicateMessageFilter : IDisposable
             return current;
         };
 
-    [DiscordEvent]
+    [Event]
     public Task MessageCreated(DiscordClient sender, MessageCreateEventArgs args)
     {
         DateTimeOffset timestamp = args.Message.Timestamp;
