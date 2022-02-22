@@ -70,9 +70,14 @@ public class BotMain : IDisposable
         Client.MessageCreated  += duplicateMessageFilter.MessageCreated;
         duplicateMessageFilter.Start();
 
-        Client.RegisterEventHandlers(Assembly.GetAssembly(typeof(BotMain))!);
-
         ServiceProvider services = new ServiceCollection().AddSingleton(this).BuildServiceProvider();
+
+        Client.RegisterEventHandlers(Assembly.GetAssembly(typeof(BotMain)) ?? throw new Exception("Failed to get assembly"));
+        Client.RegisterEventHandler(this);
+
+        duplicateMessageFilter = new DuplicateMessageFilter(this);
+        Client.RegisterEventHandler(duplicateMessageFilter);
+        duplicateMessageFilter.Start();
 
         CommandsNextConfiguration commandsConfig = new()
         {
@@ -138,6 +143,7 @@ public class BotMain : IDisposable
         await guildUser.ReplaceRolesAsync(guildUser.Roles.Concat(new[] { MutedRole }), reason);
     }
 
+    [Event(DiscordEvent.MessageCreated)]
     private Task HandleCommand(DiscordClient sender, MessageCreateEventArgs args)
     {
         if (!Config.ProhibitCommandsFromUsers.Contains(args.Author.Id))
