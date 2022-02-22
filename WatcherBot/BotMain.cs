@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -11,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Octokit;
 using Serilog;
+using WatcherBot.Commands;
 using WatcherBot.Config;
 using WatcherBot.Models;
 using WatcherBot.Utils;
@@ -70,6 +72,8 @@ public class BotMain : IDisposable
         Client.MessageCreated  += duplicateMessageFilter.MessageCreated;
         duplicateMessageFilter.Start();
 
+        Client.MessageCreated += new RoleSelfAssignment(Client, Config.RawRoleSelfAssignments).Message;
+
         ServiceProvider services = new ServiceCollection().AddSingleton(this).BuildServiceProvider();
 
         CommandsNextConfiguration commandsConfig = new()
@@ -77,7 +81,7 @@ public class BotMain : IDisposable
             DmHelp                   = true,
             EnableMentionPrefix      = true,
             ServiceProvider          = services,
-            StringPrefixes           = new[] { "!" },
+            StringPrefixes           = new[] { Config.CommandPrefix },
             UseDefaultCommandHandler = false,
         };
         CommandsNextExtension commands = Client.UseCommandsNext(commandsConfig);

@@ -5,6 +5,7 @@ using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Range = WatcherBot.Utils.Range;
 using WatcherBot.Utils;
+using WatcherBot.Commands;
 using Serilog;
 
 namespace WatcherBot.Config;
@@ -13,9 +14,12 @@ public class Config
 {
     private readonly IConfigurationRoot configuration;
 
+    public readonly string CommandPrefix;
+
     public readonly ImmutableDictionary<ulong, Range> AttachmentLimits;
     public readonly Templates Templates;
 
+    public readonly RawRoleAssignmentGuild[] RawRoleSelfAssignments;
     public readonly ImmutableHashSet<ulong> CringeChannels;
     public readonly string DiscordApiToken;
     public readonly ImmutableHashSet<char> FormattingCharacters;
@@ -46,12 +50,22 @@ public class Config
         OutputGuildId   = configuration.GetSection("Target").Get<ulong>();
         DiscordApiToken = configuration.GetSection("Token").Get<string>();
 
+        CommandPrefix = configuration.GetSection(CommandPrefix).Value;
+
         var templatesSection = configuration.GetSection(nameof(Templates));
         string arrSecToStr(string key) => string.Join("\n", templatesSection.GetSection(key).Get<string[]>());
         Templates = new Templates(
             Ban: arrSecToStr(nameof(Templates.Ban)),
             Timeout: arrSecToStr(nameof(Templates.Timeout)),
             DefaultAppealRecipient: templatesSection.GetSection(nameof(Templates.DefaultAppealRecipient)).Get<string>());
+
+        RawRoleSelfAssignments = configuration.GetSection("RoleSelfAssignment").GetChildren()
+            .Select(c => new RawRoleAssignmentGuild(
+                ulong.Parse(c.Key), c.GetChildren()
+                                     .Select(g => (command: CommandPrefix + g.Key, roleId: ulong.Parse(g.Value)))
+                                     .ToArray()))
+            .ToArray();
+
 
         //Cruelty :)
         IEnumerable<T> getOrEmpty<T>(string value)
