@@ -30,9 +30,9 @@ public class MessageDeleters : IDisposable
 
     public MessageDeleters(BotMain botMain, IOptions<Config.Config> cfg)
     {
-        this.botMain    = botMain;
-        logger          = botMain.Client.Logger;
-        config          = cfg.Value;
+        this.botMain = botMain;
+        logger       = botMain.Client.Logger;
+        config       = cfg.Value;
     }
 
     public void Dispose()
@@ -132,8 +132,8 @@ public class MessageDeleters : IDisposable
         {
             IsCringe UserIsCringe()
             {
-                using WatcherDatabaseContext databaseContext = new WatcherDatabaseContext();
-                var                          user = User.GetOrCreateUser(databaseContext, args.Message.Author.Id);
+                using var databaseContext = new WatcherDatabaseContext();
+                var       user            = User.GetOrCreateUser(databaseContext, args.Message.Author.Id);
                 IsCringe channelIsCringe = config.CringeChannels.Contains(args.Message.Channel.Id)
                                                ? IsCringe.Yes
                                                : IsCringe.No;

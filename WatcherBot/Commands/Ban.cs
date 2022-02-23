@@ -6,7 +6,6 @@ using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using WatcherBot.Config;
 using WatcherBot.Utils;
 
 namespace WatcherBot.Commands;
@@ -14,16 +13,14 @@ namespace WatcherBot.Commands;
 // ReSharper disable once UnusedType.Global
 public class BanCommandModule : BaseCommandModule
 {
-    private readonly BotMain botMain;
     private readonly Config.Config config;
 
-    public BanCommandModule(BotMain bm, IOptions<Config.Config> cfg)
+    public BanCommandModule(IOptions<Config.Config> cfg)
     {
-        botMain = bm;
-        config  = cfg.Value;
+        config = cfg.Value;
     }
 
-    private Templates Templates => botMain.Config.Templates;
+    private Templates Templates => config.Templates;
 
     private async Task BanMember(
         CommandContext context,
@@ -31,26 +28,34 @@ public class BanCommandModule : BaseCommandModule
         string?        reason,
         Anonymous      anon = Anonymous.No)
     {
-        context.Client.Logger.LogInformation($"Banning {member.Mention} with reason {reason}");
+        context.Client.Logger.LogInformation("Banning {Member} with reason {Reason}", member.UsernameWithDiscriminator,
+                                             reason);
 
         string banMsg = Templates.Ban.Replace("[reason]", reason ?? "No reason provided")
-                                     .Replace("[banner]", Templates.GetAppealRecipients(context.User.UsernameWithDiscriminator, anon));
+                                 .Replace("[banner]",
+                                          Templates.GetAppealRecipients(context.User.UsernameWithDiscriminator, anon));
 
-        string appeal = "The appeal message could not be sent.";
+        var appeal = "The appeal message could not be sent.";
         try
         {
             await member.SendMessageAsync(banMsg);
             appeal = $"The message sent was the following:\n{banMsg}";
-            context.Client.Logger.LogDebug($"Sent banned user {member.Mention} DM");
+            context.Client.Logger.LogDebug("Sent banned user {Member} DM", member.UsernameWithDiscriminator);
         }
-        catch (Exception e) { context.Client.Logger.LogWarning($"Failed to send DM to banned user: {e}"); }
-
-        try { await member.BanAsync(reason: reason); }
         catch (Exception e)
         {
-            context.Client.Logger.LogError(e, $"Error banning {Bannee}", member.UsernameWithDiscriminator);
+            context.Client.Logger.LogWarning(e, "Failed to send DM to banned user");
+        }
+
+        try
+        {
+            await member.BanAsync(reason: reason);
+        }
+        catch (Exception e)
+        {
+            context.Client.Logger.LogError(e, "Error banning {Member}", member.UsernameWithDiscriminator);
             await context.Message.Channel
-                .SendMessageAsync($"Error banning {member.UsernameWithDiscriminator}: {(e.InnerException ?? e).Message}");
+                         .SendMessageAsync($"Error banning {member.UsernameWithDiscriminator}: {(e.InnerException ?? e).Message}");
             return;
         }
 

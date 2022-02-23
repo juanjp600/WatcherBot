@@ -33,7 +33,7 @@ public class Config
     private Dictionary<ulong, Range> attachmentLimits { get; } = new();
     public IReadOnlyDictionary<ulong, Range> AttachmentLimits => attachmentLimits;
 
-    public BanTemplate BanTemplate { get; init; } = new();
+    public Templates Templates { get; init; } = new();
 
     private Spam Spam { get; } = new();
 
@@ -50,11 +50,6 @@ public class Config
     public IReadOnlySet<ulong> ProhibitFormattingFromUsers => prohibitFormattingFromUsers;
     public ulong SpamFilterExemptionRole { get; init; }
     public ulong SpamReportChannel { get; init; }
-    
-    public ILogger CreateLogger() =>
-        new LoggerConfiguration().ReadFrom.Configuration(configuration).CreateLogger();
 
-    public static Config DefaultConfig() =>
-        new(new ConfigurationBuilder().AddJsonFile("appsettings.json", false, false));
-    
+    public string YeensayMaskPath { get; init; } = "";
 }

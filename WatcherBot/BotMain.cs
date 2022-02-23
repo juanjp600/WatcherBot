@@ -35,6 +35,7 @@ public class BotMain : IDisposable
                                                .Build();
         ServiceProvider services = new ServiceCollection()
                                    .AddSingleton(this)
+                                   .AddSingleton(configurationRoot)
                                    .AddOptions()
                                    .Configure<Config.Config>(configurationRoot.GetSection(Config.Config.ConfigSection),
                                                              binder => binder.BindNonPublicProperties = true)
@@ -113,10 +114,8 @@ public class BotMain : IDisposable
         return config.ModeratorRoleIds.Overlaps(guildUser.Roles.Select(r => r.Id)) ? IsModerator.Yes : IsModerator.No;
     }
 
-    public async Task<DiscordMember> GetMemberFromUser(DiscordUser user)
-    {
-        return user is DiscordMember rgu ? rgu : await OutputGuild.GetMemberAsync(user.Id);
-    }
+    public async Task<DiscordMember> GetMemberFromUser(DiscordUser user) =>
+        user is DiscordMember rgu ? rgu : await OutputGuild.GetMemberAsync(user.Id);
 
     public async Task<IsExemptFromSpamFilter> IsUserExemptFromSpamFilter(DiscordUser user)
     {

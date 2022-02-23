@@ -16,9 +16,9 @@ public class DuplicateMessageFilter : IDisposable
     private static readonly TimeSpan LoopFrequency = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan KeepDuration = TimeSpan.FromSeconds(60);
     private readonly BotMain botMain;
-    private readonly Config.Config config;
     private readonly ConcurrentDictionary<DiscordUser, ConcurrentQueue<DiscordMessage>> cache;
     public readonly CancellationTokenSource CancellationTokenSource;
+    private readonly Config.Config config;
     private readonly ILogger logger;
 
     public DuplicateMessageFilter(BotMain botMain, Config.Config cfg)

@@ -15,7 +15,10 @@ public class CommitCommandModule : BaseCommandModule
 {
     private readonly BotMain botMain;
 
-    public CommitCommandModule(BotMain bm) => botMain = bm;
+    public CommitCommandModule(BotMain bm)
+    {
+        botMain = bm;
+    }
 
     [Command("commitmsg")]
     [Aliases("c", "commit")]

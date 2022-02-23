@@ -42,7 +42,10 @@ public class User
     public static User GetOrCreateUser(WatcherDatabaseContext db, ulong userId)
     {
         User? user = db.Users.FirstOrDefault(u => u.UserId == userId);
-        if (user is not null) { return user; }
+        if (user is not null)
+        {
+            return user;
+        }
 
         user = new User(userId);
         db.Users.Add(user);
@@ -53,6 +56,9 @@ public class User
     public void NewMessage(IsCringe isCringe)
     {
         TotalMessages++;
-        if (isCringe == IsCringe.Yes) { CringeMessages++; }
+        if (isCringe == IsCringe.Yes)
+        {
+            CringeMessages++;
+        }
     }
 }
