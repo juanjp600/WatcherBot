@@ -4,6 +4,7 @@ using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
 using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
+using DisCatSharp.Net;
 using System;
 using System.Linq;
 using System.Text.Json;
@@ -63,7 +64,7 @@ public class CreateSelfRoleMessageCommandModule : BaseCommandModule
         DiscordEmbedBuilder builder = new();
         if (data.Image is not null)
         {
-            builder.Author.Url = data.Image;
+            builder.Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail() { Url = data.Image };
         }
 
         foreach (var role in data.Roles)

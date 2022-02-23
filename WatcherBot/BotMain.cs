@@ -46,6 +46,8 @@ public class BotMain : IDisposable
         GitHubClient.Credentials = gitHubCredentials;
         GitHubClient.SetRequestTimeout(TimeSpan.FromSeconds(5));
 
+        ServiceProvider services = new ServiceCollection().AddSingleton(this).BuildServiceProvider();
+
         //Discord API
         var config = new DiscordConfiguration
         {
@@ -53,24 +55,12 @@ public class BotMain : IDisposable
             TokenType     = TokenType.Bot,
             Intents       = DiscordIntents.AllUnprivileged,
             AutoReconnect = true,
+            ServiceProvider = services,
             LoggerFactory = new LoggerFactory().AddSerilog(Log.Logger),
         };
         Client = new DiscordClient(config);
 
-        discordConfig         =  new Lazy<DiscordConfig>(() => new DiscordConfig(Config, Client));
-        Client.MessageCreated += HandleCommand;
-        MessageDeleters deleters = new(this);
-        Client.MessageCreated += deleters.ContainsDisallowedInvite;
-        Client.MessageCreated += deleters.DeleteCringeMessages;
-        Client.MessageCreated += deleters.MessageWithinAttachmentLimits;
-        Client.MessageCreated += deleters.ProhibitFormattingFromUsers;
-        Client.MessageCreated += deleters.DeletePotentialSpam;
-
-        duplicateMessageFilter =  new DuplicateMessageFilter(this);
-        Client.MessageCreated  += duplicateMessageFilter.MessageCreated;
-        duplicateMessageFilter.Start();
-
-        ServiceProvider services = new ServiceCollection().AddSingleton(this).BuildServiceProvider();
+        discordConfig =  new Lazy<DiscordConfig>(() => new DiscordConfig(Config, Client));
 
         Client.RegisterEventHandlers(Assembly.GetAssembly(typeof(BotMain)) ?? throw new Exception("Failed to get assembly"));
         Client.RegisterEventHandler(this);
