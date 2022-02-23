@@ -70,6 +70,8 @@ public class BotMain : IDisposable
         Client.MessageCreated  += duplicateMessageFilter.MessageCreated;
         duplicateMessageFilter.Start();
 
+        Client.RegisterEventHandlers(Assembly.GetAssembly(typeof(BotMain))!);
+
         ServiceProvider services = new ServiceCollection().AddSingleton(this).BuildServiceProvider();
 
         CommandsNextConfiguration commandsConfig = new()
