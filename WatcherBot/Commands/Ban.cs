@@ -23,7 +23,7 @@ public class BanCommandModule : BaseCommandModule
         config  = cfg.Value;
     }
 
-    private BanTemplate BanTemplate => config.BanTemplate;
+    private Templates Templates => botMain.Config.Templates;
 
     private async Task BanMember(
         CommandContext context,
@@ -31,58 +31,30 @@ public class BanCommandModule : BaseCommandModule
         string?        reason,
         Anonymous      anon = Anonymous.No)
     {
-        DiscordUser banner = context.User;
-        // The commands that invoke BanMember should not be executed if the caller is not a moderator
-        // but this check is here just in case.
-        if (await botMain.IsUserModerator(banner) == IsModerator.No)
+        context.Client.Logger.LogInformation($"Banning {member.Mention} with reason {reason}");
+
+        string banMsg = Templates.Ban.Replace("[reason]", reason ?? "No reason provided")
+                                     .Replace("[banner]", Templates.GetAppealRecipients(context.User.UsernameWithDiscriminator, anon));
+
+        string appeal = "The appeal message could not be sent.";
+        try
         {
-            await context.RespondAsync($"Error executing !ban: {banner.Mention} is not a moderator");
+            await member.SendMessageAsync(banMsg);
+            appeal = $"The message sent was the following:\n{banMsg}";
+            context.Client.Logger.LogDebug($"Sent banned user {member.Mention} DM");
+        }
+        catch (Exception e) { context.Client.Logger.LogWarning($"Failed to send DM to banned user: {e}"); }
+
+        try { await member.BanAsync(reason: reason); }
+        catch (Exception e)
+        {
+            context.Client.Logger.LogError(e, $"Error banning {Bannee}", member.UsernameWithDiscriminator);
+            await context.Message.Channel
+                .SendMessageAsync($"Error banning {member.UsernameWithDiscriminator}: {(e.InnerException ?? e).Message}");
             return;
         }
 
-        context.Client.Logger.LogInformation("Banning {Banee} with reason {Reason}",
-                                             member.UsernameWithDiscriminator,
-                                             reason);
-        // Send the banned user a DM with the reason and appeal information.
-        DiscordDmChannel baneeDm = await member.CreateDmChannelAsync();
-
-        string bannerStr;
-        if (anon == Anonymous.Yes) { bannerStr = BanTemplate.DefaultAppeal; }
-        else
-        {
-            // This is a username#discriminator to contact by default
-            bannerStr = banner.UsernameWithDiscriminator;
-            // If it's the same person we don't need to say Foobar#1234 or Foobar#1234
-            // so catch that here.
-            bannerStr = bannerStr != BanTemplate.DefaultAppeal
-                            ? $"`{bannerStr}` or `{BanTemplate.DefaultAppeal}`"
-                            : $"`{bannerStr}`";
-        }
-
-        string banMsg = BanTemplate.Template.Replace("[reason]", reason ?? "No reason provided")
-                                   .Replace("[banner]", bannerStr);
-
-        var feedback = $"{member.Mention} has been banned. The appeal message could not be sent.\n";
-        try
-        {
-            DiscordMessage directMsg = await baneeDm.SendMessageAsync(banMsg);
-            if (directMsg is not null && directMsg.Id != 0)
-            {
-                feedback = $"{member.Mention} has been banned. The message sent was the following:\n{banMsg}";
-                context.Client.Logger.LogDebug("Sent banned user {Banee} DM", member.UsernameWithDiscriminator);
-            }
-        }
-        catch { context.Client.Logger.LogWarning("Failed to send DM to banned user"); }
-
-        await context.Message.Channel.SendMessageAsync(feedback);
-        try { await botMain.OutputGuild.BanMemberAsync(member, reason: reason); }
-        catch (Exception e)
-        {
-            context.Client.Logger.LogError(e, "Error banning {Banee}", member.UsernameWithDiscriminator);
-            await
-                context.Message.Channel
-                       .SendMessageAsync($"Error banning {member.UsernameWithDiscriminator}: {(e.InnerException ?? e).Message}");
-        }
+        await context.Message.Channel.SendMessageAsync($"{member.Mention} has been banned. {appeal}");
     }
 
     [Command("ban")]

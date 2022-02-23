@@ -40,7 +40,7 @@ public class BotMain : IDisposable
                                                              binder => binder.BindNonPublicProperties = true)
                                    .BuildServiceProvider();
 
-        var configOptions =services.GetRequiredService<IOptions<Config.Config>>();
+        var configOptions = services.GetRequiredService<IOptions<Config.Config>>();
         config     = configOptions.Value;
         Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(configurationRoot).CreateLogger();
 
@@ -87,6 +87,7 @@ public class BotMain : IDisposable
         CommandsNextExtension commands = Client.UseCommandsNext(commandsConfig);
         commands.CommandExecuted += Logging.Logging.CommandExecuted;
         commands.CommandErrored  += Logging.Logging.CommandErrored;
+        commands.RegisterConverter(new DateTimeConverter());
         commands.RegisterCommands(Assembly.GetAssembly(typeof(BotMain)));
     }
 
