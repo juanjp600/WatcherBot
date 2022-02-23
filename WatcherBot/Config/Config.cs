@@ -1,36 +1,12 @@
-using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using Range = WatcherBot.Utils.Range;
+using WatcherBot.Utils;
 
 namespace WatcherBot.Config;
 
-public class Spam
-{
-    private readonly Lazy<IReadOnlySet<(string Substring, int MaxDistance, float Weight)>> spam;
-
-    public Spam()
-    {
-        spam = new Lazy<IReadOnlySet<(string Substring, int MaxDistance, float Weight)>>(() =>
-            spamSubstrings.Zip(spamSubstringMaxDist)
-                          .Zip(spamSubstringWeights, (tup, fl) => (tup.First, tup.Second, fl))
-                          .ToImmutableHashSet());
-    }
-
-    private string[] spamSubstrings { get; } = Array.Empty<string>();
-    private float[] spamSubstringWeights { get; } = Array.Empty<float>();
-    private int[] spamSubstringMaxDist { get; } = Array.Empty<int>();
-    public IReadOnlySet<(string Substring, int MaxDistance, float Weight)> SpamSubstrings => spam.Value;
-}
-
-public class Config : IConfigureOptions<IConfigurationRoot>
+public class Config
 {
     public const string ConfigSection = "Watcher";
-
-    public IConfigurationRoot Configuration { get; private set; } = null!;
 
     public string DiscordApiToken { get; init; } = "";
     public string GitHubToken { get; init; } = "";
@@ -59,10 +35,10 @@ public class Config : IConfigureOptions<IConfigurationRoot>
 
     public BanTemplate BanTemplate { get; init; } = new();
 
-    private Spam spamSubstrings { get; } = new();
+    private Spam Spam { get; } = new();
 
     public IReadOnlySet<(string Substring, int MaxDistance, float Weight)> SpamSubstrings =>
-        spamSubstrings.SpamSubstrings;
+        Spam.SpamSubstrings;
 
     private HashSet<string> knownSafeSubstrings { get; } = new();
     public IReadOnlySet<string> KnownSafeSubstrings => knownSafeSubstrings;
@@ -74,9 +50,4 @@ public class Config : IConfigureOptions<IConfigurationRoot>
     public IReadOnlySet<ulong> ProhibitFormattingFromUsers => prohibitFormattingFromUsers;
     public ulong SpamFilterExemptionRole { get; init; }
     public ulong SpamReportChannel { get; init; }
-
-    public void Configure(IConfigurationRoot options)
-    {
-        Configuration = options;
-    }
 }

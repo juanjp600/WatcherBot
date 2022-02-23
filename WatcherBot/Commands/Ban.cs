@@ -75,10 +75,10 @@ public class BanCommandModule : BaseCommandModule
         catch { context.Client.Logger.LogWarning("Failed to send DM to banned user"); }
 
         await context.Message.Channel.SendMessageAsync(feedback);
-        try { await botMain.DiscordConfig.OutputGuild.BanMemberAsync(member, reason: reason); }
+        try { await botMain.OutputGuild.BanMemberAsync(member, reason: reason); }
         catch (Exception e)
         {
-            context.Client.Logger.LogError("Error banning {Banee}: {Exception}", member.UsernameWithDiscriminator, e);
+            context.Client.Logger.LogError(e, "Error banning {Banee}", member.UsernameWithDiscriminator);
             await
                 context.Message.Channel
                        .SendMessageAsync($"Error banning {member.UsernameWithDiscriminator}: {(e.InnerException ?? e).Message}");

@@ -7,6 +7,7 @@ using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using WatcherBot.Models;
 
 namespace WatcherBot.Utils;
@@ -25,20 +26,17 @@ public class MessageDeleters : IDisposable
 
     private readonly BotMain botMain;
     private readonly Config.Config config;
-    private readonly WatcherDatabaseContext databaseContext;
     private readonly ILogger logger;
 
-    public MessageDeleters(BotMain botMain, Config.Config cfg)
+    public MessageDeleters(BotMain botMain, IOptions<Config.Config> cfg)
     {
         this.botMain    = botMain;
         logger          = botMain.Client.Logger;
-        config          = cfg;
-        databaseContext = new WatcherDatabaseContext();
+        config          = cfg.Value;
     }
 
     public void Dispose()
     {
-        databaseContext.Dispose();
         GC.SuppressFinalize(this);
     }
 
@@ -134,7 +132,8 @@ public class MessageDeleters : IDisposable
         {
             IsCringe UserIsCringe()
             {
-                var user = User.GetOrCreateUser(databaseContext, args.Message.Author.Id);
+                using WatcherDatabaseContext databaseContext = new WatcherDatabaseContext();
+                var                          user = User.GetOrCreateUser(databaseContext, args.Message.Author.Id);
                 IsCringe channelIsCringe = config.CringeChannels.Contains(args.Message.Channel.Id)
                                                ? IsCringe.Yes
                                                : IsCringe.No;
@@ -172,7 +171,7 @@ public class MessageDeleters : IDisposable
     {
         Task _ = Task.Run(async () =>
         {
-            if (!args.Channel.IsPrivate && botMain.DiscordConfig.OutputGuild.Id != args.Guild.Id)
+            if (!args.Channel.IsPrivate && botMain.OutputGuild != args.Guild)
             {
                 return;
             }

@@ -13,8 +13,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Octokit;
 using Serilog;
-using WatcherBot.Config;
-using WatcherBot.Models;
 using WatcherBot.Utils;
 
 namespace WatcherBot;
@@ -25,14 +23,10 @@ public class BotMain : IDisposable
 
     private readonly Config.Config config;
 
-    private readonly Lazy<DiscordConfig> discordConfig;
-
     private readonly DuplicateMessageFilter duplicateMessageFilter;
 
     public readonly GitHubClient GitHubClient;
     private readonly CancellationTokenSource shutdownRequest;
-
-    private readonly WatcherDatabaseContext watcherDatabaseContext;
 
     public BotMain()
     {
@@ -46,27 +40,8 @@ public class BotMain : IDisposable
                                                              binder => binder.BindNonPublicProperties = true)
                                    .BuildServiceProvider();
 
-        config = services.GetRequiredService<IOptions<Config.Config>>().Value;
-        {
-            Console.WriteLine(config.DiscordApiToken);
-            Console.WriteLine(config.GitHubToken);
-            Console.WriteLine(config.OutputGuildId);
-            Console.WriteLine(string.Join(", ", config.ModeratorRoleIds));
-            Console.WriteLine(string.Join("", config.FormattingCharacters));
-            Console.WriteLine(string.Join(", ", config.ProhibitCommandsFromUsers));
-            Console.WriteLine(string.Join(", ", config.InvitesAllowedOnChannels));
-            Console.WriteLine(string.Join(", ", config.InvitesAllowedOnServers));
-            Console.WriteLine(string.Join(", ", config.CringeChannels));
-            Console.WriteLine(string.Join(", ", config.AttachmentLimits));
-            Console.WriteLine($"{config.BanTemplate.Template}\n{config.BanTemplate.DefaultAppeal}");
-            Console.WriteLine(string.Join("; ", config.SpamSubstrings));
-            Console.WriteLine(string.Join(", ", config.KnownSafeSubstrings));
-            Console.WriteLine(config.MutedRole);
-            Console.WriteLine(string.Join(", ", config.ProhibitFormattingFromUsers));
-            Console.WriteLine(config.SpamFilterExemptionRole);
-            Console.WriteLine(config.SpamReportChannel);
-        }
-        Environment.Exit(0);
+        var configOptions =services.GetRequiredService<IOptions<Config.Config>>();
+        config     = configOptions.Value;
         Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(configurationRoot).CreateLogger();
 
         Log.Logger.Information("Starting bot");
@@ -89,9 +64,8 @@ public class BotMain : IDisposable
         };
         Client = new DiscordClient(discordConfiguration);
 
-        discordConfig         =  new Lazy<DiscordConfig>(() => new DiscordConfig(config, Client));
         Client.MessageCreated += HandleCommand;
-        MessageDeleters deleters = new(this, config);
+        MessageDeleters deleters = new(this, configOptions);
         Client.MessageCreated += deleters.ContainsDisallowedInvite;
         Client.MessageCreated += deleters.DeleteCringeMessages;
         Client.MessageCreated += deleters.MessageWithinAttachmentLimits;
@@ -114,23 +88,19 @@ public class BotMain : IDisposable
         commands.CommandExecuted += Logging.Logging.CommandExecuted;
         commands.CommandErrored  += Logging.Logging.CommandErrored;
         commands.RegisterCommands(Assembly.GetAssembly(typeof(BotMain)));
-
-        // Database
-        watcherDatabaseContext = new WatcherDatabaseContext();
     }
 
-    public DiscordConfig DiscordConfig => discordConfig.Value;
+    public DiscordGuild OutputGuild => Client.Guilds[config.OutputGuildId];
 
-    public DiscordChannel SpamReportChannel => DiscordConfig.OutputGuild.Channels[config.SpamReportChannel];
+    public DiscordChannel SpamReportChannel => OutputGuild.Channels[config.SpamReportChannel];
 
-    public DiscordRole MutedRole => DiscordConfig.OutputGuild.Roles[config.MutedRole];
+    public DiscordRole MutedRole => OutputGuild.Roles[config.MutedRole];
 
     public void Dispose()
     {
         Client.Dispose();
         duplicateMessageFilter.Cancel();
         duplicateMessageFilter.Dispose();
-        watcherDatabaseContext.Dispose();
         GC.SuppressFinalize(this);
     }
 
@@ -138,21 +108,18 @@ public class BotMain : IDisposable
 
     public async Task<IsModerator> IsUserModerator(DiscordUser user)
     {
-        DiscordGuild  guild     = DiscordConfig.OutputGuild;
-        DiscordMember guildUser = user is DiscordMember rgu ? rgu : await guild.GetMemberAsync(user.Id);
-        return DiscordConfig.ModeratorRoles.Intersect(guildUser.Roles).Any() ? IsModerator.Yes : IsModerator.No;
+        DiscordMember guildUser = user is DiscordMember rgu ? rgu : await OutputGuild.GetMemberAsync(user.Id);
+        return config.ModeratorRoleIds.Overlaps(guildUser.Roles.Select(r => r.Id)) ? IsModerator.Yes : IsModerator.No;
     }
 
     public async Task<DiscordMember> GetMemberFromUser(DiscordUser user)
     {
-        DiscordGuild guild = DiscordConfig.OutputGuild;
-        return user is DiscordMember rgu ? rgu : await guild.GetMemberAsync(user.Id);
+        return user is DiscordMember rgu ? rgu : await OutputGuild.GetMemberAsync(user.Id);
     }
 
     public async Task<IsExemptFromSpamFilter> IsUserExemptFromSpamFilter(DiscordUser user)
     {
-        DiscordGuild  guild     = DiscordConfig.OutputGuild;
-        DiscordMember guildUser = user is DiscordMember rgu ? rgu : await guild.GetMemberAsync(user.Id);
+        DiscordMember guildUser = user is DiscordMember rgu ? rgu : await OutputGuild.GetMemberAsync(user.Id);
         return guildUser.Roles.Any(r => r.Id == config.SpamFilterExemptionRole)
                    ? IsExemptFromSpamFilter.Yes
                    : IsExemptFromSpamFilter.No;
@@ -160,8 +127,7 @@ public class BotMain : IDisposable
 
     public async Task MuteUser(DiscordUser user, string reason)
     {
-        DiscordGuild  guild     = DiscordConfig.OutputGuild;
-        DiscordMember guildUser = user is DiscordMember rgu ? rgu : await guild.GetMemberAsync(user.Id);
+        DiscordMember guildUser = user is DiscordMember rgu ? rgu : await OutputGuild.GetMemberAsync(user.Id);
         await guildUser.ReplaceRolesAsync(guildUser.Roles.Concat(new[] { MutedRole }), reason);
     }
 
