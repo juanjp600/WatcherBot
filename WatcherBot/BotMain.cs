@@ -46,6 +46,8 @@ public class BotMain : IDisposable
         GitHubClient.Credentials = gitHubCredentials;
         GitHubClient.SetRequestTimeout(TimeSpan.FromSeconds(5));
 
+        ServiceProvider services = new ServiceCollection().AddSingleton(this).BuildServiceProvider();
+
         //Discord API
         var config = new DiscordConfiguration
         {
@@ -53,24 +55,19 @@ public class BotMain : IDisposable
             TokenType     = TokenType.Bot,
             Intents       = DiscordIntents.AllUnprivileged,
             AutoReconnect = true,
+            ServiceProvider = services,
             LoggerFactory = new LoggerFactory().AddSerilog(Log.Logger),
         };
         Client = new DiscordClient(config);
 
-        discordConfig         =  new Lazy<DiscordConfig>(() => new DiscordConfig(Config, Client));
-        Client.MessageCreated += HandleCommand;
-        MessageDeleters deleters = new(this);
-        Client.MessageCreated += deleters.ContainsDisallowedInvite;
-        Client.MessageCreated += deleters.DeleteCringeMessages;
-        Client.MessageCreated += deleters.MessageWithinAttachmentLimits;
-        Client.MessageCreated += deleters.ProhibitFormattingFromUsers;
-        Client.MessageCreated += deleters.DeletePotentialSpam;
+        discordConfig =  new Lazy<DiscordConfig>(() => new DiscordConfig(Config, Client));
 
-        duplicateMessageFilter =  new DuplicateMessageFilter(this);
-        Client.MessageCreated  += duplicateMessageFilter.MessageCreated;
+        Client.RegisterEventHandlers(Assembly.GetAssembly(typeof(BotMain)) ?? throw new Exception("Failed to get assembly"));
+        Client.RegisterEventHandler(this);
+
+        duplicateMessageFilter = new DuplicateMessageFilter(this);
+        Client.RegisterEventHandler(duplicateMessageFilter);
         duplicateMessageFilter.Start();
-
-        ServiceProvider services = new ServiceCollection().AddSingleton(this).BuildServiceProvider();
 
         CommandsNextConfiguration commandsConfig = new()
         {
@@ -136,6 +133,7 @@ public class BotMain : IDisposable
         await guildUser.ReplaceRolesAsync(guildUser.Roles.Concat(new[] { MutedRole }), reason);
     }
 
+    [Event(DiscordEvent.MessageCreated)]
     private Task HandleCommand(DiscordClient sender, MessageCreateEventArgs args)
     {
         if (!Config.ProhibitCommandsFromUsers.Contains(args.Author.Id))
