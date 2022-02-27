@@ -67,10 +67,7 @@ public class CreateSelfRoleMessageCommandModule : BaseCommandModule
             builder.Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail() { Url = data.Image };
         }
 
-        foreach (var role in data.Roles)
-        {
-            builder.AddField(role.Name, role.Description, data.Inline);
-        }
+        builder.AddFields(data.Roles.Select(r => new DiscordEmbedField(r.Name, r.Description, data.Inline)));
 
         var buttons = data.Roles.Select(r => new DiscordButtonComponent(
             r.Style != 0 ? r.Style : data.DefaultButtonStyle,
@@ -79,9 +76,9 @@ public class CreateSelfRoleMessageCommandModule : BaseCommandModule
             emoji: r.Emoji is null ? null : new DiscordComponentEmoji(
                 context.CommandsNext.ConvertArgument<DiscordEmoji>(r.Emoji, context).Result as DiscordEmoji)));
 
-        DiscordMessageBuilder messageBuilder = new();
-        messageBuilder.AddEmbed(builder);
-        messageBuilder.AddComponents(buttons);
-        await context.Channel.SendMessageAsync(messageBuilder);
+        await context.Channel.SendMessageAsync(
+            new DiscordMessageBuilder()
+                .AddEmbed(builder)
+                .AddComponents(buttons));
     }
 }
