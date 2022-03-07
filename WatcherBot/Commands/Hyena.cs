@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
+using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
@@ -20,20 +21,20 @@ public class HyenaCommandModule : BaseCommandModule
 {
     private const string Endpoint = "https://api.yeen.land";
     private static readonly HttpClient HttpClient = new();
-    private readonly BotMain botMain;
 
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true,
     };
 
-    public HyenaCommandModule(BotMain bm)
-    {
-        botMain = bm;
-        MaskPath = bm.Config.YeensayMaskPath;
-    }
+    private readonly BotMain botMain;
+    private readonly string maskPath;
 
-    private string MaskPath { get; }
+    public HyenaCommandModule(BotMain bm, IOptions<Config.Config> cfg)
+    {
+        botMain  = bm;
+        maskPath = cfg.Value.YeensayMaskPath;
+    }
 
     [Command("trash")]
     [Description("garbaggio")]
@@ -76,7 +77,7 @@ public class HyenaCommandModule : BaseCommandModule
     public async Task HyenaSay(CommandContext context)
     {
         Task<IsModerator> isModeratorTask = botMain.IsUserModerator(context.Member);
-    
+
         HyenaUrl? url = await QueryApi(Endpoint);
 
         if (url is null)
@@ -89,7 +90,7 @@ public class HyenaCommandModule : BaseCommandModule
         await using Stream        stream   = await response.Content.ReadAsStreamAsync();
 
         using Image image = await Image.LoadAsync(stream);
-        using Image mask  = await Image.LoadAsync(MaskPath);
+        using Image mask  = await Image.LoadAsync(maskPath);
         // ReSharper disable once AccessToDisposedClosure
         mask.Mutate(x => x.Resize(image.Size()));
         var options = new GraphicsOptions { AlphaCompositionMode = PixelAlphaCompositionMode.SrcIn };
@@ -101,15 +102,15 @@ public class HyenaCommandModule : BaseCommandModule
         await result.SaveAsync(memoryStream, new PngEncoder());
         memoryStream.Position = 0;
 
-        DiscordMessageBuilder builder = new DiscordMessageBuilder().WithFile("yeensay.png", memoryStream);
-        IsModerator isModerator = await isModeratorTask;
-        
+        DiscordMessageBuilder builder     = new DiscordMessageBuilder().WithFile("yeensay.png", memoryStream);
+        IsModerator           isModerator = await isModeratorTask;
+
         Task[] tasks =
         {
             context.Message.DeleteAsync(),
-            isModerator == IsModerator.Yes || context.Guild.Id != botMain.Config.OutputGuildId
+            isModerator == IsModerator.Yes || context.Guild != botMain.OutputGuild
                 ? context.Channel.SendMessageAsync(builder)
-                : Bezos(context)
+                : Bezos(context),
         };
         await Task.WhenAll(tasks);
     }

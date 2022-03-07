@@ -1,12 +1,13 @@
-﻿using Microsoft.Extensions.Configuration;
-using System;
+﻿namespace WatcherBot.Utils;
 
-namespace WatcherBot.Utils;
-
-public record Templates(string Ban, string Timeout, string DefaultAppealRecipient)
+public class Templates
 {
-    public string GetAppealRecipients(string otherName, Anonymous anon)
-        => anon == Anonymous.Yes || otherName == DefaultAppealRecipient
+    public string Ban { get; init; } = "";
+    public string Timeout { get; init; } = "";
+    public string DefaultAppealRecipient { get; init; } = "";
+
+    public string GetAppealRecipients(string otherName, Anonymous anon) =>
+        anon == Anonymous.Yes || otherName == DefaultAppealRecipient
             ? DefaultAppealRecipient
             : $"{otherName} or {DefaultAppealRecipient}";
 }

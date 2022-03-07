@@ -11,7 +11,7 @@ public class DateTimeConverter : IArgumentConverter<DateTime>
 {
     public async Task<Optional<DateTime>> ConvertAsync(string value, CommandContext ctx)
     {
-        Match match = Regex.Match(value.ToLower(), @"^(\d+)([a-z]+)$");
+        Match match = await Task.Run(() => Regex.Match(value.ToLower(), @"^(\d+)([a-z]+)$"));
         if (!match.Success || !int.TryParse(match.Groups[1].ValueSpan, out int count))
         {
             return Optional.FromNoValue<DateTime>();
@@ -49,6 +49,7 @@ public class DateTimeConverter : IArgumentConverter<DateTime>
             default:
                 return Optional.FromNoValue<DateTime>();
         }
+
         return Optional.FromValue(ret);
     }
 }

@@ -7,6 +7,7 @@ using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using WatcherBot.Models;
 
 namespace WatcherBot.Utils;
@@ -24,19 +25,18 @@ public class MessageDeleters : IDisposable
     }
 
     private readonly BotMain botMain;
-    private readonly WatcherDatabaseContext databaseContext;
+    private readonly Config.Config config;
     private readonly ILogger logger;
 
-    public MessageDeleters(BotMain botMain)
+    public MessageDeleters(BotMain botMain, IOptions<Config.Config> cfg)
     {
-        this.botMain    = botMain;
-        logger          = botMain.Client.Logger;
-        databaseContext = new WatcherDatabaseContext();
+        this.botMain = botMain;
+        logger       = botMain.Client.Logger;
+        config       = cfg.Value;
     }
 
     public void Dispose()
     {
-        databaseContext.Dispose();
         GC.SuppressFinalize(this);
     }
 
@@ -46,12 +46,12 @@ public class MessageDeleters : IDisposable
     {
         Delete DeletionCondition()
         {
-            if (botMain.Config.InvitesAllowedOnChannels.Contains(args.Message.Channel.Id))
+            if (config.InvitesAllowedOnChannels.Contains(args.Message.Channel.Id))
             {
                 return Delete.No;
             }
 
-            if (args.Guild is null || botMain.Config.InvitesAllowedOnServers.Contains(args.Guild.Id))
+            if (args.Guild is null || config.InvitesAllowedOnServers.Contains(args.Guild.Id))
             {
                 return Delete.No;
             }
@@ -81,7 +81,7 @@ public class MessageDeleters : IDisposable
     {
         Delete DeletionCondition()
         {
-            if (!botMain.Config.AttachmentLimits.ContainsKey(args.Channel.Id))
+            if (!config.AttachmentLimits.ContainsKey(args.Channel.Id))
             {
                 return Delete.No;
             }
@@ -94,7 +94,7 @@ public class MessageDeleters : IDisposable
             int numberLinks = args.Message.Content.CountSubstrings("https://");
             int sum         = numberWellSizedAttachments + numberLinks;
 
-            bool attachmentCountWithinLimits = botMain.Config.AttachmentLimits[args.Channel.Id].Contains(sum);
+            bool attachmentCountWithinLimits = config.AttachmentLimits[args.Channel.Id].Contains(sum);
             bool allAttachmentsWellSized     = numberWellSizedAttachments == args.Message.Attachments.Count;
 
             return attachmentCountWithinLimits && allAttachmentsWellSized && !insecureLink ? Delete.No : Delete.Yes;
@@ -114,8 +114,8 @@ public class MessageDeleters : IDisposable
     public Task ProhibitFormattingFromUsers(DiscordClient sender, MessageCreateEventArgs args)
     {
         if (!GeneralCondition(args.Message)
-            || !botMain.Config.ProhibitFormattingFromUsers.Contains(args.Author.Id)
-            || !botMain.Config.FormattingCharacters.Overlaps(args.Message.Content))
+            || !config.ProhibitFormattingFromUsers.Contains(args.Author.Id)
+            || !config.FormattingCharacters.Overlaps(args.Message.Content))
         {
             return Task.CompletedTask;
         }
@@ -132,8 +132,9 @@ public class MessageDeleters : IDisposable
         {
             IsCringe UserIsCringe()
             {
-                var user = User.GetOrCreateUser(databaseContext, args.Message.Author.Id);
-                IsCringe channelIsCringe = botMain.Config.CringeChannels.Contains(args.Message.Channel.Id)
+                using var databaseContext = new WatcherDatabaseContext();
+                var       user            = User.GetOrCreateUser(databaseContext, args.Message.Author.Id);
+                IsCringe channelIsCringe = config.CringeChannels.Contains(args.Message.Channel.Id)
                                                ? IsCringe.Yes
                                                : IsCringe.No;
                 if (args.Message.Channel is not DiscordDmChannel)
@@ -170,7 +171,7 @@ public class MessageDeleters : IDisposable
     {
         Task _ = Task.Run(async () =>
         {
-            if (!args.Channel.IsPrivate && botMain.DiscordConfig.OutputGuild.Id != args.Guild.Id)
+            if (!args.Channel.IsPrivate && botMain.OutputGuild != args.Guild)
             {
                 return;
             }
@@ -190,17 +191,17 @@ public class MessageDeleters : IDisposable
                 return;
             }
 
-            if (botMain.Config.InvitesAllowedOnChannels.Contains(args.Channel.Id)
+            if (config.InvitesAllowedOnChannels.Contains(args.Channel.Id)
                 && TextContainsInvite(args.Message.Content))
             {
                 return;
             }
 
-            //if (args.Channel.Id != botMain.Config.SpamReportChannel) { return; }
+            //if (args.Channel.Id != config.SpamReportChannel) { return; }
 
             string messageContent       = args.Message.Content;
             string messageContentToTest = messageContent.ToLowerInvariant();
-            foreach (string safeSubstr in botMain.Config.KnownSafeSubstrings)
+            foreach (string safeSubstr in config.KnownSafeSubstrings)
             {
                 messageContentToTest = messageContentToTest.Replace(safeSubstr, "");
             }
@@ -217,7 +218,7 @@ public class MessageDeleters : IDisposable
             var      sw                  = Stopwatch.StartNew();
             (string InText, string InFilter, float Weight)[] hits = messageContentSplit
                                                                     .Where(s1 => !string.IsNullOrWhiteSpace(s1))
-                                                                    .Select(s1 => botMain.Config.SpamSubstrings
+                                                                    .Select(s1 => config.SpamSubstrings
                                                                                     .FirstOrDefault(s2 =>
                                                                                         LevenshteinDistance
                                                                                             .Calculate(s1,
@@ -232,7 +233,7 @@ public class MessageDeleters : IDisposable
                                                                         )>()
                                                                     .Where(t => t.Weight > 0.0f)
                                                                     .ToArray();
-            /*botMain.Config.SpamSubstrings
+            /*config.SpamSubstrings
                 .Select(s => LevenshteinDistance.Calculate(messageContentToTest, s.Substring, s.MaxDistance))
                 .Where(r => r is not null)
                 .Cast<(int Index, int Length, int Distance)>()
@@ -258,7 +259,7 @@ public class MessageDeleters : IDisposable
 
     public Task ReplyInNoConversationChannel(DiscordClient sender, MessageCreateEventArgs args)
     {
-        if (!botMain.Config.AttachmentLimits.ContainsKey(args.Channel.Id) || args.Message.ReferencedMessage is null)
+        if (!config.AttachmentLimits.ContainsKey(args.Channel.Id) || args.Message.ReferencedMessage is null)
         {
             return Task.CompletedTask;
         }

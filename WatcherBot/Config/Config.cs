@@ -1,93 +1,55 @@
-using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
-using Microsoft.Extensions.Configuration;
-using Range = WatcherBot.Utils.Range;
 using WatcherBot.Utils;
-using Serilog;
 
 namespace WatcherBot.Config;
 
 public class Config
 {
-    private readonly IConfigurationRoot configuration;
+    public const string ConfigSection = "Watcher";
 
-    public readonly ImmutableDictionary<ulong, Range> AttachmentLimits;
-    public readonly Templates Templates;
+    public string DiscordApiToken { get; init; } = "";
+    public string GitHubToken { get; init; } = "";
+    public ulong OutputGuildId { get; init; }
 
-    public readonly ImmutableHashSet<ulong> CringeChannels;
-    public readonly string DiscordApiToken;
-    public readonly ImmutableHashSet<char> FormattingCharacters;
+    private HashSet<ulong> moderatorRoleIds { get; } = new();
+    public IReadOnlySet<ulong> ModeratorRoleIds => moderatorRoleIds;
 
-    public readonly string GitHubToken;
-    public readonly ImmutableHashSet<ulong> InvitesAllowedOnChannels;
-    public readonly ImmutableHashSet<ulong> InvitesAllowedOnServers;
+    private string formattingCharacters { get; } = "";
+    public IReadOnlySet<char> FormattingCharacters => formattingCharacters.ToHashSet();
 
-    public readonly ImmutableHashSet<string> KnownSafeSubstrings;
-    public readonly ImmutableHashSet<ulong> ModeratorRoleIds;
-    public readonly ulong MutedRole;
-    public readonly ulong OutputGuildId;
-    public readonly ImmutableHashSet<ulong> ProhibitCommandsFromUsers;
+    private HashSet<ulong> prohibitCommandsFromUsers { get; } = new();
+    public IReadOnlySet<ulong> ProhibitCommandsFromUsers => prohibitCommandsFromUsers;
 
-    public readonly ImmutableHashSet<ulong> ProhibitFormattingFromUsers;
-    public readonly ulong SpamFilterExemptionRole;
-    public readonly ulong SpamReportChannel;
+    private HashSet<ulong> invitesAllowedOnChannels { get; } = new();
+    public IReadOnlySet<ulong> InvitesAllowedOnChannels => invitesAllowedOnChannels;
 
-    public readonly ImmutableHashSet<(string Substring, int MaxDistance, float Weight)> SpamSubstrings;
+    private HashSet<ulong> invitesAllowedOnServers { get; } = new();
+    public IReadOnlySet<ulong> InvitesAllowedOnServers => invitesAllowedOnServers;
 
-    public readonly string YeensayMaskPath;
+    private HashSet<ulong> cringeChannels { get; } = new();
+    public IReadOnlySet<ulong> CringeChannels => cringeChannels;
 
-    public Config(IConfigurationBuilder builder)
-    {
-        configuration = builder.Build();
+    private Dictionary<ulong, Range> attachmentLimits { get; } = new();
+    public IReadOnlyDictionary<ulong, Range> AttachmentLimits => attachmentLimits;
 
-        GitHubToken     = configuration.GetSection("GitHubToken").Get<string>();
-        OutputGuildId   = configuration.GetSection("Target").Get<ulong>();
-        DiscordApiToken = configuration.GetSection("Token").Get<string>();
+    public Templates Templates { get; init; } = new();
 
-        var templatesSection = configuration.GetSection(nameof(Templates));
-        string arrSecToStr(string key) => string.Join("\n", templatesSection.GetSection(key).Get<string[]>());
-        Templates = new Templates(
-            Ban: arrSecToStr(nameof(Templates.Ban)),
-            Timeout: arrSecToStr(nameof(Templates.Timeout)),
-            DefaultAppealRecipient: templatesSection.GetSection(nameof(Templates.DefaultAppealRecipient)).Get<string>());
+    private Spam Spam { get; } = new();
 
-        //Cruelty :)
-        IEnumerable<T> getOrEmpty<T>(string value)
-            => configuration.GetSection(value).Get<T[]>() ?? Enumerable.Empty<T>();
+    public IReadOnlySet<(string Substring, int MaxDistance, float Weight)> SpamSubstrings =>
+        Spam.SpamSubstrings;
 
-        CringeChannels       = getOrEmpty<ulong>("CringeChannels").ToImmutableHashSet();
-        FormattingCharacters = configuration.GetSection("FormattingCharacters").Get<string>().ToImmutableHashSet();
-        InvitesAllowedOnChannels = getOrEmpty<ulong>("InvitesAllowedOnChannels").ToImmutableHashSet();
-        InvitesAllowedOnServers = getOrEmpty<ulong>("InvitesAllowedOnServers").ToImmutableHashSet();
-        ModeratorRoleIds = getOrEmpty<ulong>("ModeratorRoles").ToImmutableHashSet();
-        AttachmentLimits = configuration.GetSection("AttachmentLimits")
-                                        .GetChildren()
-                                        .ToImmutableDictionary(c => ulong.Parse(c.Key),
-                                                               c => new Range(c.Get<string>()));
-        ProhibitCommandsFromUsers = getOrEmpty<ulong>("ProhibitCommandsFromUsers").ToImmutableHashSet();
-        ProhibitFormattingFromUsers = getOrEmpty<ulong>("ProhibitFormattingFromUsers").ToImmutableHashSet();
+    private HashSet<string> knownSafeSubstrings { get; } = new();
+    public IReadOnlySet<string> KnownSafeSubstrings => knownSafeSubstrings;
 
-        //Spam detection
-        IEnumerable<string> spamSubstrs = getOrEmpty<string>("SpamSubstrings");
-        IEnumerable<int> spamSubstrMaxDist = getOrEmpty<int>("SpamSubstringMaxDist");
-        IEnumerable<float> spamSubstrWeights = getOrEmpty<float>("SpamSubstringWeights");
-        SpamSubstrings = spamSubstrs.Zip(spamSubstrMaxDist, (s,  d) => (s, d))
-                                    .Zip(spamSubstrWeights, (sd, w) => (sd.s, sd.d, w))
-                                    .ToImmutableHashSet();
-        Console.WriteLine(string.Join(", ", SpamSubstrings));
-        KnownSafeSubstrings = getOrEmpty<string>("KnownSafeSubstrings").ToImmutableHashSet();
-        SpamReportChannel       = configuration.GetSection("SpamReportChannel").Get<ulong>();
-        SpamFilterExemptionRole = configuration.GetSection("SpamFilterExemptionRole").Get<ulong>();
-        MutedRole               = configuration.GetSection("MutedRole").Get<ulong>();
+    public ulong MutedRole { get; init; }
 
-        YeensayMaskPath = configuration.GetSection("YeensayMaskPath").Get<string>();
-    }
 
-    public ILogger CreateLogger()
-        => new LoggerConfiguration().ReadFrom.Configuration(configuration).CreateLogger();
+    private HashSet<ulong> prohibitFormattingFromUsers { get; } = new();
+    public IReadOnlySet<ulong> ProhibitFormattingFromUsers => prohibitFormattingFromUsers;
+    public ulong SpamFilterExemptionRole { get; init; }
+    public ulong SpamReportChannel { get; init; }
 
-    public static Config DefaultConfig() =>
-        new(new ConfigurationBuilder().AddJsonFile("appsettings.json", false, false));
+    public string YeensayMaskPath { get; init; } = "";
 }
