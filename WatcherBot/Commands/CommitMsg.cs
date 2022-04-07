@@ -41,22 +41,16 @@ public class CommitCommandModule : BaseCommandModule
             }
             else
             {
-                context.Client.Logger.LogDebug("Output too long for a message; creating files");
-                // Create a temporary directory
-                string directory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-                Directory.CreateDirectory(directory);
-                // Save the string to a file there
-                string filepath = Path.Combine(directory, "commits.md");
-                context.Client.Logger.LogDebug("Temp filepath: {Filepath}", filepath);
-                await File.WriteAllTextAsync(filepath, content);
-                // Send the file to Discord
-                context.Client.Logger.LogDebug("Sending file...");
-                await context.RespondAsync(new DiscordMessageBuilder().WithFile(new FileStream(filepath,
-                                                                                    FileMode.Open)));
+                context.Client.Logger.LogDebug("Content too long for a single message; creating streams for file...");
+                await using var memoryStream = new MemoryStream();
+                await using var writer       = new StreamWriter(memoryStream);
+                context.Client.Logger.LogDebug("Writing to stream");
+                await writer.WriteAsync(content);
+                await writer.FlushAsync();
+                memoryStream.Position = 0;
+                context.Client.Logger.LogDebug("Stream prepared");
+                await context.RespondAsync(new DiscordMessageBuilder().WithFile("commits.md", memoryStream));
                 context.Client.Logger.LogDebug("Sent");
-                // Delete the temporary directory
-                context.Client.Logger.LogDebug("Deleting {Filepath}", filepath);
-                Directory.Delete(directory, true);
             }
         }
     }
