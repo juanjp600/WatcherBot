@@ -21,10 +21,20 @@ public static class BarotraumaToolBox
     public static string StringConcat(this IEnumerable<string> enumerable, string separator) =>
         string.Join(separator, enumerable);
 
-    public static int CountImportantLabels(this Issue issue, IReadOnlySet<string> importantLabels) =>
-        issue.Labels.Count(l => importantLabels.Contains(l.Name, StringComparer.OrdinalIgnoreCase));
+    public static int CountLabelWeighting(this Issue issue, IReadOnlyDictionary<string, int> labelWeighting) =>
+        issue.Labels.Sum(l => labelWeighting.GetValueOrDefault(l.Name));
 
     public static IEnumerable<(int, T)> Indexed<T>(this IEnumerable<T> source) => source.Select((x, i) => (i, x));
+
+    public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
+    {
+        foreach (T t in source)
+        {
+            action(t);
+        }
+    }
+
+    public static Task[] ForEachAsync<T>(this IEnumerable<T> source, Func<T, Task> action) => source.Select(action).ToArray();
 
     public static MemoryStream ToMemoryStream(this string content)
     {

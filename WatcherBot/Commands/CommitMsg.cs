@@ -84,7 +84,7 @@ public class CommitCommandModule : BaseCommandModule
             await botMain.GitHubClient.Issue.GetAllForRepository("Regalis11", "Barotrauma", request);
 
         // Used to align each line
-        int padding = (issues.Count + 1).ToString().Length + 2;
+        int padding = issues.Max(i => i.Number).ToString().Length + 2;
 
         StringBuilder stringBuilder = new();
 
@@ -99,11 +99,11 @@ public class CommitCommandModule : BaseCommandModule
             return name;
         }
 
-        void MakeLine(Issue issue, int index)
+        void MakeLine(Issue issue)
         {
-            string number = $"{index}.".PadRight(padding).WithForegroundColour(ForegroundColour.Red);
+            string number = $"{issue.Number}.".PadRight(padding).WithForegroundColour(ForegroundColour.Red);
             string labels = issue.Labels
-                                 .ExceptBy(config.Issues.IgnoreLabels, l => l.Name, StringComparer.OrdinalIgnoreCase)
+                                 .ExceptBy(config.Issues.HideLabels, l => l.Name, StringComparer.OrdinalIgnoreCase)
                                  .Select(l => Colour(l.Name))
                                  .StringConcat(", ");
             var spaces = new string(' ', padding);
@@ -119,12 +119,16 @@ public class CommitCommandModule : BaseCommandModule
             stringBuilder.AppendLine("");
         }
 
+        var scores = new int[issues.Count];
+        for (var i = 0; i < issues.Count; i++)
+        {
+            scores[i] = issues[i].CountLabelWeighting(config.Issues.LabelWeighting);
+        }
 
-        foreach ((int i, Issue issue) in issues
-                                         .OrderByDescending(issue =>
-                                                                issue.CountImportantLabels(config.Issues
-                                                                    .ImportantLabels))
-                                         .Indexed()) { MakeLine(issue, i + 1); }
+        issues.Zip(scores)
+              .OrderByDescending(pair => pair.Second)
+              .ThenBy(pair => pair.First.Number)
+              .ForEach(pair => MakeLine(pair.First));
 
         await using var memoryStream = stringBuilder.ToString().ToMemoryStream();
 
