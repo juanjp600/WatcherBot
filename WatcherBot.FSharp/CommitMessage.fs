@@ -74,7 +74,7 @@ let TryGetCommit (client: GitHubClient) (hash: Result<string, string>) : Async<R
     }
 
 let GetCommitMessages (client: GitHubClient) (args: string []) : Task<string> =
-    async {
+    task {
         return
             args
             |> Array.map ParseHash
@@ -90,4 +90,3 @@ let GetCommitMessages (client: GitHubClient) (args: string []) : Task<string> =
                 | Error message -> message)
             |> String.concat "\n"
     }
-    |> Async.StartAsTask
