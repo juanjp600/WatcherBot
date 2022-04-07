@@ -8,17 +8,18 @@ namespace WatcherBot.Utils;
 public abstract class LoopingTask : IDisposable
 {
     protected readonly BotMain BotMain;
-    public CancellationTokenSource CancellationTokenSource { get; } = new ();
     protected readonly Config.Config Config;
     protected readonly ILogger Logger;
-    protected virtual TimeSpan LoopFrequency => TimeSpan.Zero;
 
     public LoopingTask(BotMain botMain, Config.Config config)
     {
-        this.BotMain = botMain;
-        this.Config  = config;
-        Logger       = botMain.Client.Logger;
+        BotMain = botMain;
+        Config  = config;
+        Logger  = botMain.Client.Logger;
     }
+
+    public CancellationTokenSource CancellationTokenSource { get; } = new();
+    protected virtual TimeSpan LoopFrequency => TimeSpan.Zero;
 
     public Task? Loop { get; private set; }
 
