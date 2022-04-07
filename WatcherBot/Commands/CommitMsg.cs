@@ -1,12 +1,17 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Octokit;
+using WatcherBot.Utils;
+using WatcherBot.Utils.ANSI;
 using static WatcherBot.FSharp.CommitMessage;
-using FileMode = System.IO.FileMode;
 
 namespace WatcherBot.Commands;
 
@@ -14,10 +19,12 @@ namespace WatcherBot.Commands;
 public class CommitCommandModule : BaseCommandModule
 {
     private readonly BotMain botMain;
+    private readonly Config.Config config;
 
-    public CommitCommandModule(BotMain bm)
+    public CommitCommandModule(BotMain bm, IOptions<Config.Config> cfg)
     {
         botMain = bm;
+        config  = cfg.Value;
     }
 
     [Command("commitmsg")]
@@ -42,13 +49,7 @@ public class CommitCommandModule : BaseCommandModule
             else
             {
                 context.Client.Logger.LogDebug("Content too long for a single message; creating streams for file...");
-                await using var memoryStream = new MemoryStream();
-                await using var writer       = new StreamWriter(memoryStream);
-                context.Client.Logger.LogDebug("Writing to stream");
-                await writer.WriteAsync(content);
-                await writer.FlushAsync();
-                memoryStream.Position = 0;
-                context.Client.Logger.LogDebug("Stream prepared");
+                await using var memoryStream = content.ToMemoryStream();
                 await context.RespondAsync(new DiscordMessageBuilder().WithFile("commits.md", memoryStream));
                 context.Client.Logger.LogDebug("Sent");
             }
@@ -68,5 +69,67 @@ public class CommitCommandModule : BaseCommandModule
     {
         Issue issue = await botMain.GitHubClient.Issue.Get("Regalis11", "Barotrauma", number);
         await context.RespondAsync(issue.HtmlUrl);
+    }
+
+    [Command("openissues")]
+    public async Task OpenIssues(CommandContext context)
+    {
+        // Get open Unstable issues
+        var request = new RepositoryIssueRequest {
+            Labels = {"Unstable"},
+            State  = ItemStateFilter.Open,
+        };
+
+        IReadOnlyList<Issue> issues =
+            await botMain.GitHubClient.Issue.GetAllForRepository("Regalis11", "Barotrauma", request);
+
+        // Used to align each line
+        int padding = (issues.Count + 1).ToString().Length + 2;
+
+        StringBuilder stringBuilder = new();
+
+        // Colour an issue label based on the config
+        string Colour(string name)
+        {
+            if (config.Issues.LabelColours.TryGetValue(name, out ForegroundColour colour))
+            {
+                name = name.WithForegroundColour(colour);
+            }
+
+            return name;
+        }
+
+        void MakeLine(Issue issue, int index)
+        {
+            string number = $"{index}.".PadRight(padding).WithForegroundColour(ForegroundColour.Red);
+            string labels = issue.Labels
+                                 .ExceptBy(config.Issues.IgnoreLabels, l => l.Name, StringComparer.OrdinalIgnoreCase)
+                                 .Select(l => Colour(l.Name))
+                                 .StringConcat(", ");
+            var spaces = new string(' ', padding);
+
+            stringBuilder.Append(number);
+
+            stringBuilder.AppendLine(issue.Title);
+
+            if (!string.IsNullOrWhiteSpace(labels)) { stringBuilder.AppendLine($"{spaces}{labels}"); }
+
+            stringBuilder.Append(spaces);
+            stringBuilder.AppendLine(issue.HtmlUrl.WithForegroundColour(ForegroundColour.Blue).WithStyle(Style.Bold));
+            stringBuilder.AppendLine("");
+        }
+
+
+        foreach ((int i, Issue issue) in issues
+                                         .OrderByDescending(issue =>
+                                                                issue.CountImportantLabels(config.Issues
+                                                                    .ImportantLabels))
+                                         .Indexed()) { MakeLine(issue, i + 1); }
+
+        await using var memoryStream = stringBuilder.ToString().ToMemoryStream();
+
+        DiscordMessageBuilder builder = new DiscordMessageBuilder().WithFile("issues.ansi", memoryStream);
+
+        await context.RespondAsync(builder);
     }
 }

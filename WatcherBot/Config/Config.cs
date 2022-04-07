@@ -45,9 +45,11 @@ public class Config
 
     public ulong MutedRole { get; init; }
 
-
     private HashSet<ulong> prohibitFormattingFromUsers { get; } = new();
     public IReadOnlySet<ulong> ProhibitFormattingFromUsers => prohibitFormattingFromUsers;
+
+    public Issues Issues { get; } = new();
+
     public ulong SpamFilterExemptionRole { get; init; }
     public ulong SpamReportChannel { get; init; }
 

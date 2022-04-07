@@ -1,7 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.Entities;
+using Octokit;
 
 namespace WatcherBot.Utils;
 
@@ -10,17 +15,28 @@ public static class BarotraumaToolBox
     public static bool ContainsLink(this string content) =>
         content.CountSubstrings("https://") + content.CountSubstrings("http://") > 0;
 
+    public static string StringConcat(this IEnumerable<string> enumerable, char separator) =>
+        string.Join(separator, enumerable);
+
+    public static string StringConcat(this IEnumerable<string> enumerable, string separator) =>
+        string.Join(separator, enumerable);
+
+    public static int CountImportantLabels(this Issue issue, IReadOnlySet<string> importantLabels) =>
+        issue.Labels.Count(l => importantLabels.Contains(l.Name, StringComparer.OrdinalIgnoreCase));
+
+    public static IEnumerable<(int, T)> Indexed<T>(this IEnumerable<T> source) => source.Select((x, i) => (i, x));
+
+    public static MemoryStream ToMemoryStream(this string content)
+    {
+        byte[]   bytes = Encoding.UTF8.GetBytes(content);
+        return new MemoryStream(bytes);
+    }
+
     private static async Task<DiscordDmChannel?> GetDmChannelAsync(this CommandContext context)
     {
-        if (context.Channel is DiscordDmChannel dmChannel)
-        {
-            return dmChannel;
-        }
+        if (context.Channel is DiscordDmChannel dmChannel) { return dmChannel; }
 
-        if (context.Member is not null)
-        {
-            return await context.Member.CreateDmChannelAsync();
-        }
+        if (context.Member is not null) { return await context.Member.CreateDmChannelAsync(); }
 
         return null;
     }
@@ -28,46 +44,31 @@ public static class BarotraumaToolBox
     public static async Task RespondDmAsync(this CommandContext context, Action<DiscordMessageBuilder> action)
     {
         DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
-        if (dmChannel is not null)
-        {
-            await dmChannel.SendMessageAsync(action);
-        }
+        if (dmChannel is not null) { await dmChannel.SendMessageAsync(action); }
     }
 
     public static async Task RespondDmAsync(this CommandContext context, DiscordEmbed embed)
     {
         DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
-        if (dmChannel is not null)
-        {
-            await dmChannel.SendMessageAsync(embed);
-        }
+        if (dmChannel is not null) { await dmChannel.SendMessageAsync(embed); }
     }
 
     public static async Task RespondDmAsync(this CommandContext context, DiscordMessageBuilder builder)
     {
         DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
-        if (dmChannel is not null)
-        {
-            await dmChannel.SendMessageAsync(builder);
-        }
+        if (dmChannel is not null) { await dmChannel.SendMessageAsync(builder); }
     }
 
     public static async Task RespondDmAsync(this CommandContext context, string content)
     {
         DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
-        if (dmChannel is not null)
-        {
-            await dmChannel.SendMessageAsync(content);
-        }
+        if (dmChannel is not null) { await dmChannel.SendMessageAsync(content); }
     }
 
     public static async Task RespondDmAsync(this CommandContext context, string content, DiscordEmbed embed)
     {
         DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
-        if (dmChannel is not null)
-        {
-            await dmChannel.SendMessageAsync(content, embed);
-        }
+        if (dmChannel is not null) { await dmChannel.SendMessageAsync(content, embed); }
     }
 
     public static int CountSubstrings(this string str, string substr)
@@ -77,10 +78,7 @@ public static class BarotraumaToolBox
         while (true)
         {
             index = str.IndexOf(substr, index, StringComparison.OrdinalIgnoreCase);
-            if (index < 0)
-            {
-                break;
-            }
+            if (index < 0) { break; }
 
             index++;
             count++;
@@ -102,16 +100,14 @@ public static class BarotraumaToolBox
         Exception?        dmException   = null;
         try
         {
-            dm = await
-                     dmChannel
-                         .SendMessageAsync($"You have been automatically muted on the Undertow Games server for sending the following message in {spamMessage.Channel.Mention}:\n\n"
-                                           + $"```\n{spamMessage.Content.Replace("`", "")}\n```\n\n"
-                                           + "This is a spam prevention measure. If this was a false positive, please contact a moderator or administrator.");
+            dm =
+                await
+                    dmChannel
+                        .SendMessageAsync($"You have been automatically muted on the Undertow Games server for sending the following message in {spamMessage.Channel.Mention}:\n\n"
+                                          + $"```\n{spamMessage.Content.Replace("`", "")}\n```\n\n"
+                                          + "This is a spam prevention measure. If this was a false positive, please contact a moderator or administrator.");
         }
-        catch (Exception e)
-        {
-            dmException = e;
-        }
+        catch (Exception e) { dmException = e; }
 
         if (!spamMessage.Channel.IsPrivate)
         {
