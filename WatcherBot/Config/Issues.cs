@@ -5,12 +5,12 @@ namespace WatcherBot.Config;
 
 public class Issues
 {
-    private HashSet<string> importantIssueLabels { get; } = new();
-    public IReadOnlySet<string> ImportantLabels => importantIssueLabels;
+    private HashSet<string> importantLabels { get; } = new();
+    public IReadOnlySet<string> ImportantLabels => importantLabels;
 
-    private HashSet<string> ignoreIssueLabels { get; } = new();
-    public IReadOnlySet<string> IgnoreLabels => ignoreIssueLabels;
+    private HashSet<string> ignoreLabels { get; } = new();
+    public IReadOnlySet<string> IgnoreLabels => ignoreLabels;
 
-    private Dictionary<string, ForegroundColour> issueLabelColours { get; } = new();
-    public IReadOnlyDictionary<string, ForegroundColour> LabelColours => issueLabelColours;
+    private Dictionary<string, ForegroundColour> labelColours { get; } = new();
+    public IReadOnlyDictionary<string, ForegroundColour> LabelColours => labelColours;
 }
