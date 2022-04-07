@@ -19,7 +19,7 @@ public abstract class LoopingTask : IDisposable
     }
 
     public CancellationTokenSource CancellationTokenSource { get; } = new();
-    protected virtual TimeSpan LoopFrequency => TimeSpan.Zero;
+    protected abstract TimeSpan LoopFrequency { get; }
 
     public Task? Loop { get; private set; }
 
