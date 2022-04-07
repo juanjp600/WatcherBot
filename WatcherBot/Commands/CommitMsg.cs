@@ -89,14 +89,22 @@ public class CommitCommandModule : BaseCommandModule
         StringBuilder stringBuilder = new();
 
         // Colour an issue label based on the config
-        string Colour(string name)
+        string Format(string name)
         {
-            if (config.Issues.LabelColours.TryGetValue(name, out ForegroundColour colour))
+            ForegroundColour? colour = null;
+            Style?            style  = null;
+
+            if (config.Issues.LabelColours.TryGetValue(name, out ForegroundColour c))
             {
-                name = name.WithForegroundColour(colour);
+                colour = c;
+            }
+            
+            if (config.Issues.EmphasiseLabels.Contains(name))
+            {
+                style = Style.Bold;
             }
 
-            return name;
+            return name.WithOptionalForegroundColourAndStyle(colour, style);
         }
 
         void MakeLine(Issue issue)
@@ -104,7 +112,8 @@ public class CommitCommandModule : BaseCommandModule
             string number = $"{issue.Number}.".PadRight(padding).WithForegroundColour(ForegroundColour.Red);
             string labels = issue.Labels
                                  .ExceptBy(config.Issues.HideLabels, l => l.Name, StringComparer.OrdinalIgnoreCase)
-                                 .Select(l => Colour(l.Name))
+                                 .OrderByDescending(l => config.Issues.EmphasiseLabels.Contains(l.Name) ? 1 : 0)
+                                 .Select(l => Format(l.Name))
                                  .StringConcat(", ");
             var spaces = new string(' ', padding);
 
@@ -115,7 +124,7 @@ public class CommitCommandModule : BaseCommandModule
             if (!string.IsNullOrWhiteSpace(labels)) { stringBuilder.AppendLine($"{spaces}{labels}"); }
 
             stringBuilder.Append(spaces);
-            stringBuilder.AppendLine(issue.HtmlUrl.WithForegroundColour(ForegroundColour.Blue).WithStyle(Style.Bold));
+            stringBuilder.AppendLine(issue.HtmlUrl.WithForegroundColourAndStyle(ForegroundColour.Blue, Style.Bold));
             stringBuilder.AppendLine("");
         }
 

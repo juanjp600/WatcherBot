@@ -9,6 +9,9 @@ public class Issues
     private Dictionary<string, int> labelWeighting { get; } = new(StringComparer.OrdinalIgnoreCase);
     public IReadOnlyDictionary<string, int> LabelWeighting => labelWeighting;
 
+    private HashSet<string> emphasiseLabels { get; } = new(StringComparer.OrdinalIgnoreCase);
+    public IReadOnlySet<string> EmphasiseLabels => emphasiseLabels;
+
     private HashSet<string> hideLabels { get; } = new(StringComparer.OrdinalIgnoreCase);
     public IReadOnlySet<string> HideLabels => hideLabels;
 

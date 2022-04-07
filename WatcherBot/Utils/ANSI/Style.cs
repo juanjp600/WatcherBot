@@ -4,18 +4,14 @@ namespace WatcherBot.Utils.ANSI;
 
 public enum Style
 {
-    Normal,
-    Bold,
-    Underline,
+    Normal = 0,
+    Bold = 1,
+    Underline = 4,
 }
 
 public static class StyleExtensions
 {
-    public static string GetCode(this Style style) =>
-        style switch {
-            Style.Normal    => "\u001b[0m",
-            Style.Bold      => "\u001b[1m",
-            Style.Underline => "\u001b[4m",
-            var _           => throw new ArgumentOutOfRangeException(nameof(style), style, null),
-        };
+    public static int GetNumber(this Style style) => (int)style;
+
+    public static string GetCode(this Style style) => $"\u001b[{style.GetNumber()}m";
 }
