@@ -128,11 +128,7 @@ public class CommitCommandModule : BaseCommandModule
             stringBuilder.AppendLine("");
         }
 
-        var scores = new int[issues.Count];
-        for (var i = 0; i < issues.Count; i++)
-        {
-            scores[i] = issues[i].CountLabelWeighting(config.Issues.LabelWeighting);
-        }
+        IEnumerable<int> scores = issues.Select(i => i.CountLabelWeighting(config.Issues.LabelWeighting));
 
         issues.Zip(scores)
               .OrderByDescending(pair => pair.Second)
