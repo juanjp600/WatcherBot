@@ -94,15 +94,9 @@ public class CommitCommandModule : BaseCommandModule
             ForegroundColour? colour = null;
             Style?            style  = null;
 
-            if (config.Issues.LabelColours.TryGetValue(name, out ForegroundColour c))
-            {
-                colour = c;
-            }
-            
-            if (config.Issues.EmphasiseLabels.Contains(name))
-            {
-                style = Style.Bold;
-            }
+            if (config.Issues.LabelColours.TryGetValue(name, out ForegroundColour c)) { colour = c; }
+
+            if (config.Issues.EmphasiseLabels.Contains(name)) { style = Style.Bold; }
 
             return name.WithOptionalForegroundColourAndStyle(colour, style);
         }
