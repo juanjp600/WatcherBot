@@ -1,12 +1,22 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using WatcherBot.Utils;
+using Range = WatcherBot.Utils.Range;
 
 namespace WatcherBot.Config;
 
 public class Config
 {
     public const string ConfigSection = "Watcher";
+    private readonly Lazy<Dictionary<ulong, Range>> attachmentLimitsLazy;
+
+    public Config()
+    {
+        attachmentLimitsLazy =
+            new Lazy<Dictionary<ulong, Range>>(() => attachmentLimits.ToDictionary(kvp => Convert.ToUInt64(kvp.Key),
+                                                   kvp => kvp.Value));
+    }
 
     public string DiscordApiToken { get; init; } = "";
     public string GitHubToken { get; init; } = "";
@@ -30,8 +40,8 @@ public class Config
     private HashSet<ulong> cringeChannels { get; } = new();
     public IReadOnlySet<ulong> CringeChannels => cringeChannels;
 
-    private Dictionary<ulong, Range> attachmentLimits { get; } = new();
-    public IReadOnlyDictionary<ulong, Range> AttachmentLimits => attachmentLimits;
+    private Dictionary<string, Range> attachmentLimits { get; } = new();
+    public IReadOnlyDictionary<ulong, Range> AttachmentLimits => attachmentLimitsLazy.Value;
 
     public Templates Templates { get; init; } = new();
 
