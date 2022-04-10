@@ -110,7 +110,7 @@ public class BotMain : IDisposable
 
     public async Task<IsModerator> IsUserModerator(DiscordUser user)
     {
-        DiscordMember guildUser = user is DiscordMember rgu ? rgu : await OutputGuild.GetMemberAsync(user.Id);
+        DiscordMember guildUser = await GetMemberFromUser(user);
         return config.ModeratorRoleIds.Overlaps(guildUser.Roles.Select(r => r.Id)) ? IsModerator.Yes : IsModerator.No;
     }
 
@@ -119,7 +119,7 @@ public class BotMain : IDisposable
 
     public async Task<IsExemptFromSpamFilter> IsUserExemptFromSpamFilter(DiscordUser user)
     {
-        DiscordMember guildUser = user is DiscordMember rgu ? rgu : await OutputGuild.GetMemberAsync(user.Id);
+        DiscordMember guildUser = await GetMemberFromUser(user);
         return guildUser.Roles.Any(r => r.Id == config.SpamFilterExemptionRole)
                    ? IsExemptFromSpamFilter.Yes
                    : IsExemptFromSpamFilter.No;
@@ -127,8 +127,8 @@ public class BotMain : IDisposable
 
     public async Task MuteUser(DiscordUser user, string reason)
     {
-        DiscordMember guildUser = user is DiscordMember rgu ? rgu : await OutputGuild.GetMemberAsync(user.Id);
-        await guildUser.ReplaceRolesAsync(guildUser.Roles.Concat(new[] { MutedRole }), reason);
+        DiscordMember guildUser = await GetMemberFromUser(user);
+        await guildUser.GrantRoleAsync(MutedRole, reason);
     }
 
     private Task HandleCommand(DiscordClient sender, MessageCreateEventArgs args)
