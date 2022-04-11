@@ -1,9 +1,24 @@
-﻿namespace WatcherBot.Utils;
+﻿using System;
+using System.Collections.Generic;
+
+namespace WatcherBot.Utils;
 
 public class Templates
 {
-    public string Ban { get; init; } = "";
-    public string Timeout { get; init; } = "";
+    private readonly Lazy<string> banLazy;
+    private readonly Lazy<string> timeoutLazy;
+
+    public Templates()
+    {
+        banLazy     = new Lazy<string>(() => string.Join('\n', ban));
+        timeoutLazy = new Lazy<string>(() => string.Join('\n', timeout));
+    }
+
+    private List<string> ban { get; } = new();
+    private List<string> timeout { get; } = new();
+
+    public string Ban => banLazy.Value;
+    public string Timeout => timeoutLazy.Value;
     public string DefaultAppealRecipient { get; init; } = "";
 
     public string GetAppealRecipients(string otherName, Anonymous anon) =>

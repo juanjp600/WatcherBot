@@ -25,7 +25,7 @@ public class Config
     private HashSet<ulong> moderatorRoleIds { get; } = new();
     public IReadOnlySet<ulong> ModeratorRoleIds => moderatorRoleIds;
 
-    private string formattingCharacters { get; } = "";
+    private string formattingCharacters { get; init; } = "";
     public IReadOnlySet<char> FormattingCharacters => formattingCharacters.ToHashSet();
 
     private HashSet<ulong> prohibitCommandsFromUsers { get; } = new();

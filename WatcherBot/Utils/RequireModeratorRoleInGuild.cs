@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
+using Serilog;
 
 namespace WatcherBot.Utils;
 
@@ -14,11 +15,14 @@ public class RequireModeratorRoleInGuild : CheckBaseAttribute
         var botMain = (BotMain?)ctx.Services.GetService(typeof(BotMain));
         if (botMain?.OutputGuild is null)
         {
+            Log.Logger.Error("Could not find output guild in moderator check");
             return false;
         }
 
         DiscordMember? member = await botMain.OutputGuild.GetMemberAsync(ctx.User.Id);
 
-        return await botMain.IsUserModerator(member).ContinueWith(e => e.Result == IsModerator.Yes);
+        bool result = await botMain.IsUserModerator(member).ContinueWith(e => e.Result == IsModerator.Yes);
+        Log.Logger.Debug("IsUserModerator: {Result}", result);
+        return result;
     }
 }
