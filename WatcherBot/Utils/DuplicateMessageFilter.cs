@@ -6,6 +6,7 @@ using DisCatSharp;
 using DisCatSharp.Entities;
 using DisCatSharp.EventArgs;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace WatcherBot.Utils;
 
@@ -15,7 +16,7 @@ public class DuplicateMessageFilter : LoopingTask
     private static readonly TimeSpan KeepDuration = TimeSpan.FromSeconds(60);
     private readonly ConcurrentDictionary<DiscordUser, ConcurrentQueue<DiscordMessage>> cache = new();
 
-    public DuplicateMessageFilter(BotMain botMain, Config.Config config) : base(botMain, config)
+    public DuplicateMessageFilter(BotMain botMain, IOptions<Config.Config> config) : base(botMain, config)
     { }
 
     protected override TimeSpan LoopFrequency => TimeSpan.FromSeconds(1);

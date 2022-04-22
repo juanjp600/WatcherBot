@@ -73,7 +73,7 @@ public class BotMain : IDisposable
         Client.MessageCreated += deleters.ProhibitFormattingFromUsers;
         Client.MessageCreated += deleters.DeletePotentialSpam;
 
-        duplicateMessageFilter =  new DuplicateMessageFilter(this, config);
+        duplicateMessageFilter =  new DuplicateMessageFilter(this, configOptions);
         Client.MessageCreated  += duplicateMessageFilter.MessageCreated;
         duplicateMessageFilter.Start();
 

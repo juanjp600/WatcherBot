@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace WatcherBot.Utils;
 
@@ -11,10 +12,10 @@ public abstract class LoopingTask : IDisposable
     protected readonly Config.Config Config;
     protected readonly ILogger Logger;
 
-    public LoopingTask(BotMain botMain, Config.Config config)
+    public LoopingTask(BotMain botMain, IOptions<Config.Config> config)
     {
         BotMain = botMain;
-        Config  = config;
+        Config  = config.Value;
         Logger  = botMain.Client.Logger;
     }
 
