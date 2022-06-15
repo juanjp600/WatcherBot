@@ -60,7 +60,7 @@ public class CommitCommandModule : BaseCommandModule
     [Aliases("i")]
     public async Task Issue(CommandContext context) =>
         await
-            context.RespondAsync("You can open an issue for that!\n<https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md>");
+            context.RespondAsync("You can open an issue for that!\n<https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.yml>");
 
     [Command("issue")]
     [Aliases("pr", "pull")]
