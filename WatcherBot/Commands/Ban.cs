@@ -49,7 +49,7 @@ public class BanCommandModule : BaseCommandModule
 
         try
         {
-            await member.BanAsync(reason: reason);
+            await member.BanAsync(1, reason);
         }
         catch (Exception e)
         {

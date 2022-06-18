@@ -30,7 +30,7 @@ public class DateTimeConverter : IArgumentConverter<DateTime>
                 ret = DateTime.Now.AddMinutes(count);
                 break;
             case "h":
-                ret = DateTime.Now.AddMinutes(count);
+                ret = DateTime.Now.AddHours(count);
                 break;
             case "d":
                 ret = DateTime.Now.AddDays(count);
