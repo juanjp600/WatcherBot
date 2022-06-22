@@ -33,7 +33,7 @@ public class BotMain : IDisposable
         IConfigurationRoot configurationRoot = new ConfigurationBuilder()
                                                .AddJsonFile("appsettings.json", false, false)
                                                .Build();
-        using ServiceProvider services = new ServiceCollection()
+        ServiceProvider services = new ServiceCollection()
                                    .AddSingleton(this)
                                    .AddSingleton(configurationRoot)
                                    .AddOptions()
