@@ -28,12 +28,14 @@ public class BotMain : IDisposable
     public readonly GitHubClient GitHubClient;
     private readonly CancellationTokenSource shutdownRequest;
 
+    private readonly ServiceProvider services;
+
     public BotMain()
     {
         IConfigurationRoot configurationRoot = new ConfigurationBuilder()
                                                .AddJsonFile("appsettings.json", false, false)
                                                .Build();
-        ServiceProvider services = new ServiceCollection()
+        services = new ServiceCollection()
                                    .AddSingleton(this)
                                    .AddSingleton(configurationRoot)
                                    .AddOptions()
@@ -103,6 +105,7 @@ public class BotMain : IDisposable
         Client.Dispose();
         duplicateMessageFilter.Cancel();
         duplicateMessageFilter.Dispose();
+        services.Dispose();
         GC.SuppressFinalize(this);
     }
 
