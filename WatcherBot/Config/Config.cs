@@ -9,7 +9,7 @@ namespace WatcherBot.Config;
 public class Config
 {
     public const string ConfigSection = "Watcher";
-    private readonly System.Lazy<Dictionary<ulong, Range>> attachmentLimitsLazy;
+    private readonly Lazy<Dictionary<ulong, Range>> attachmentLimitsLazy;
 
     public Config()
     {
