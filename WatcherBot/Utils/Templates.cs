@@ -14,9 +14,6 @@ public class Templates
         timeoutLazy = new Lazy<string>(() => string.Join('\n', timeout));
     }
 
-    private List<string> ban { get; } = new();
-    private List<string> timeout { get; } = new();
-
     public string Ban => banLazy.Value;
     public string Timeout => timeoutLazy.Value;
     public string DefaultAppealRecipient { get; init; } = "";
@@ -25,4 +22,10 @@ public class Templates
         anon == Anonymous.Yes || otherName == DefaultAppealRecipient
             ? DefaultAppealRecipient
             : $"{otherName} or {DefaultAppealRecipient}";
+
+    // ReSharper disable CollectionNeverUpdated.Local
+    private List<string> ban { get; } = new();
+
+    private List<string> timeout { get; } = new();
+    // ReSharper restore CollectionNeverUpdated.Local
 }

@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using DisCatSharp;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
+using DisCatSharp.Enums;
 
 namespace WatcherBot.Utils;
 

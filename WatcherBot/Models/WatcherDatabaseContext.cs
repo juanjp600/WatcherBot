@@ -10,11 +10,14 @@ public class WatcherDatabaseContext : DbContext
 {
     private static readonly Lazy<string> ConnectionString = new(() =>
     {
-        var                    configBuilder             = new ConfigurationBuilder();
-        IConfigurationBuilder? jsonFile                  = configBuilder.AddJsonFile("appsettings.json");
-        IConfigurationRoot?    build                     = jsonFile.Build();
-        string?                connString                = build.GetConnectionString("WatcherDatabase");
-        string                 executingAssemblyLocation = Assembly.GetExecutingAssembly().Location;
+        var                   configBuilder          = new ConfigurationBuilder();
+        IConfigurationBuilder jsonFile               = configBuilder.AddJsonFile("appsettings.json");
+        IConfigurationRoot    build                  = jsonFile.Build();
+        const string          watcherDatabaseSection = "WatcherDatabase";
+        string connString = build.GetConnectionString(watcherDatabaseSection)
+                            ?? throw new
+                                InvalidOperationException($"Missing connection string {watcherDatabaseSection}");
+        string executingAssemblyLocation = Assembly.GetExecutingAssembly().Location;
         return connString.Replace("$WD", Path.GetDirectoryName(executingAssemblyLocation));
     });
 

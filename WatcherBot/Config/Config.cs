@@ -9,7 +9,7 @@ namespace WatcherBot.Config;
 public class Config
 {
     public const string ConfigSection = "Watcher";
-    private readonly Lazy<Dictionary<ulong, Range>> attachmentLimitsLazy;
+    private readonly System.Lazy<Dictionary<ulong, Range>> attachmentLimitsLazy;
 
     public Config()
     {
@@ -25,7 +25,7 @@ public class Config
     private HashSet<ulong> moderatorRoleIds { get; } = new();
     public IReadOnlySet<ulong> ModeratorRoleIds => moderatorRoleIds;
 
-    private string formattingCharacters { get; init; } = "";
+    private string formattingCharacters { get; } = "";
     public IReadOnlySet<char> FormattingCharacters => formattingCharacters.ToHashSet();
 
     private HashSet<ulong> prohibitCommandsFromUsers { get; } = new();
@@ -40,6 +40,7 @@ public class Config
     private HashSet<ulong> cringeChannels { get; } = new();
     public IReadOnlySet<ulong> CringeChannels => cringeChannels;
 
+    // ReSharper disable once CollectionNeverUpdated.Local
     private Dictionary<string, Range> attachmentLimits { get; } = new();
     public IReadOnlyDictionary<ulong, Range> AttachmentLimits => attachmentLimitsLazy.Value;
 
@@ -62,6 +63,11 @@ public class Config
 
     public ulong SpamFilterExemptionRole { get; init; }
     public ulong SpamReportChannel { get; init; }
+
+    private HashSet<ulong> keepAliveThreadIds { get; } = new();
+    public IReadOnlySet<ulong> KeepAliveThreadIds => keepAliveThreadIds;
+
+    public string KeepAliveMessage { get; init; } = "";
 
     public string YeensayMaskPath { get; init; } = "";
 }

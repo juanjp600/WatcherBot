@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -26,9 +27,10 @@ public class BotMain : IDisposable
     private readonly DuplicateMessageFilter duplicateMessageFilter;
 
     public readonly GitHubClient GitHubClient;
-    private readonly CancellationTokenSource shutdownRequest;
 
     private readonly ServiceProvider services;
+    private readonly CancellationTokenSource shutdownRequest;
+    private readonly ThreadKeepAlive threadKeepAlive;
 
     public BotMain()
     {
@@ -36,12 +38,12 @@ public class BotMain : IDisposable
                                                .AddJsonFile("appsettings.json", false, false)
                                                .Build();
         services = new ServiceCollection()
-                                   .AddSingleton(this)
-                                   .AddSingleton(configurationRoot)
-                                   .AddOptions()
-                                   .Configure<Config.Config>(configurationRoot.GetSection(Config.Config.ConfigSection),
-                                                             binder => binder.BindNonPublicProperties = true)
-                                   .BuildServiceProvider();
+                   .AddSingleton(this)
+                   .AddSingleton(configurationRoot)
+                   .AddOptions()
+                   .Configure<Config.Config>(configurationRoot.GetSection(Config.Config.ConfigSection),
+                                             binder => binder.BindNonPublicProperties = true)
+                   .BuildServiceProvider();
 
         var configOptions = services.GetRequiredService<IOptions<Config.Config>>();
         config     = configOptions.Value;
@@ -79,12 +81,15 @@ public class BotMain : IDisposable
         Client.MessageCreated  += duplicateMessageFilter.MessageCreated;
         duplicateMessageFilter.Start();
 
+        threadKeepAlive = new ThreadKeepAlive(this, configOptions);
+        threadKeepAlive.Start();
+
         CommandsNextConfiguration commandsConfig = new()
         {
             DmHelp                   = true,
             EnableMentionPrefix      = true,
             ServiceProvider          = services,
-            StringPrefixes           = new[] { "!" },
+            StringPrefixes           = new List<string> { "!" },
             UseDefaultCommandHandler = false,
         };
         CommandsNextExtension commands = Client.UseCommandsNext(commandsConfig);
@@ -105,6 +110,8 @@ public class BotMain : IDisposable
         Client.Dispose();
         duplicateMessageFilter.Cancel();
         duplicateMessageFilter.Dispose();
+        threadKeepAlive.Cancel();
+        threadKeepAlive.Dispose();
         services.Dispose();
         GC.SuppressFinalize(this);
     }

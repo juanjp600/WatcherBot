@@ -14,7 +14,7 @@ public class DateTimeConverter : IArgumentConverter<DateTime>
         Match match = await Task.Run(() => Regex.Match(value.ToLower(), @"^(\d+)([a-z]+)$"));
         if (!match.Success || !int.TryParse(match.Groups[1].ValueSpan, out int count))
         {
-            return Optional.FromNoValue<DateTime>();
+            return Optional.None;
         }
 
         DateTime ret;
@@ -47,9 +47,9 @@ public class DateTimeConverter : IArgumentConverter<DateTime>
                 ret = DateTime.Now.AddYears(count);
                 break;
             default:
-                return Optional.FromNoValue<DateTime>();
+                return Optional.None;
         }
 
-        return Optional.FromValue(ret);
+        return Optional.Some(ret);
     }
 }

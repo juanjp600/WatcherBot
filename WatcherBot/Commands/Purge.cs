@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DisCatSharp;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
+using DisCatSharp.Enums;
 using WatcherBot.Utils;
 
 namespace WatcherBot.Commands;
@@ -17,8 +17,9 @@ public class PurgeCommandModule : BaseCommandModule
                  + " in a direction indicated by sign (negative => up, positive => down).")]
     [RequirePermissionInGuild(Permissions.ManageMessages)]
     [RequireModeratorRoleInGuild]
-    public async Task Purge(CommandContext context, DiscordMessage msg, int count = 1024, [RemainingText] string? reason = null) {
-
+    public async Task Purge(CommandContext          context, DiscordMessage msg, int count = 1024,
+                            [RemainingText] string? reason = null)
+    {
         Func<ulong, int, Task<IReadOnlyList<DiscordMessage>>> getMessages =
             count < 0 ? msg.Channel.GetMessagesBeforeAsync : msg.Channel.GetMessagesAfterAsync;
 

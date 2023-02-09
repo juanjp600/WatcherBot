@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.Entities;
+using DisCatSharp.Enums;
 using Octokit;
 
 namespace WatcherBot.Utils;
@@ -34,19 +35,26 @@ public static class BarotraumaToolBox
         }
     }
 
-    public static Task[] ForEachAsync<T>(this IEnumerable<T> source, Func<T, Task> action) => source.Select(action).ToArray();
+    public static Task[] ForEachAsync<T>(this IEnumerable<T> source, Func<T, Task> action) =>
+        source.Select(action).ToArray();
 
     public static MemoryStream ToMemoryStream(this string content)
     {
-        byte[]   bytes = Encoding.UTF8.GetBytes(content);
+        byte[] bytes = Encoding.UTF8.GetBytes(content);
         return new MemoryStream(bytes);
     }
 
     private static async Task<DiscordDmChannel?> GetDmChannelAsync(this CommandContext context)
     {
-        if (context.Channel is DiscordDmChannel dmChannel) { return dmChannel; }
+        if (context.Channel is DiscordDmChannel dmChannel)
+        {
+            return dmChannel;
+        }
 
-        if (context.Member is not null) { return await context.Member.CreateDmChannelAsync(); }
+        if (context.Member is not null)
+        {
+            return await context.Member.CreateDmChannelAsync();
+        }
 
         return null;
     }
@@ -54,31 +62,46 @@ public static class BarotraumaToolBox
     public static async Task RespondDmAsync(this CommandContext context, Action<DiscordMessageBuilder> action)
     {
         DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
-        if (dmChannel is not null) { await dmChannel.SendMessageAsync(action); }
+        if (dmChannel is not null)
+        {
+            await dmChannel.SendMessageAsync(action);
+        }
     }
 
     public static async Task RespondDmAsync(this CommandContext context, DiscordEmbed embed)
     {
         DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
-        if (dmChannel is not null) { await dmChannel.SendMessageAsync(embed); }
+        if (dmChannel is not null)
+        {
+            await dmChannel.SendMessageAsync(embed);
+        }
     }
 
     public static async Task RespondDmAsync(this CommandContext context, DiscordMessageBuilder builder)
     {
         DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
-        if (dmChannel is not null) { await dmChannel.SendMessageAsync(builder); }
+        if (dmChannel is not null)
+        {
+            await dmChannel.SendMessageAsync(builder);
+        }
     }
 
     public static async Task RespondDmAsync(this CommandContext context, string content)
     {
         DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
-        if (dmChannel is not null) { await dmChannel.SendMessageAsync(content); }
+        if (dmChannel is not null)
+        {
+            await dmChannel.SendMessageAsync(content);
+        }
     }
 
     public static async Task RespondDmAsync(this CommandContext context, string content, DiscordEmbed embed)
     {
         DiscordDmChannel? dmChannel = await context.GetDmChannelAsync();
-        if (dmChannel is not null) { await dmChannel.SendMessageAsync(content, embed); }
+        if (dmChannel is not null)
+        {
+            await dmChannel.SendMessageAsync(content, embed);
+        }
     }
 
     public static int CountSubstrings(this string str, string substr)
@@ -88,7 +111,10 @@ public static class BarotraumaToolBox
         while (true)
         {
             index = str.IndexOf(substr, index, StringComparison.OrdinalIgnoreCase);
-            if (index < 0) { break; }
+            if (index < 0)
+            {
+                break;
+            }
 
             index++;
             count++;
@@ -117,7 +143,10 @@ public static class BarotraumaToolBox
                                           + $"```\n{spamMessage.Content.Replace("`", "")}\n```\n\n"
                                           + "This is a spam prevention measure. If this was a false positive, please contact a moderator or administrator.");
         }
-        catch (Exception e) { dmException = e; }
+        catch (Exception e)
+        {
+            dmException = e;
+        }
 
         if (!spamMessage.Channel.IsPrivate)
         {
@@ -135,4 +164,13 @@ public static class BarotraumaToolBox
                                              : ""));
         }
     }
+
+    public static TimeSpan ToTimeSpan(this ThreadAutoArchiveDuration duration) => duration switch
+    {
+        ThreadAutoArchiveDuration.OneHour   => TimeSpan.FromHours(1),
+        ThreadAutoArchiveDuration.OneDay    => TimeSpan.FromDays(1),
+        ThreadAutoArchiveDuration.ThreeDays => TimeSpan.FromDays(3),
+        ThreadAutoArchiveDuration.OneWeek   => TimeSpan.FromDays(7),
+        _                                   => throw new ArgumentOutOfRangeException(nameof(duration), duration, null),
+    };
 }

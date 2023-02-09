@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
-using DisCatSharp;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
+using DisCatSharp.Enums;
 using Microsoft.Extensions.Logging;
 using WatcherBot.Utils;
 
