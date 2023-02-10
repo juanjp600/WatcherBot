@@ -165,12 +165,5 @@ public static class BarotraumaToolBox
         }
     }
 
-    public static TimeSpan ToTimeSpan(this ThreadAutoArchiveDuration duration) => duration switch
-    {
-        ThreadAutoArchiveDuration.OneHour   => TimeSpan.FromHours(1),
-        ThreadAutoArchiveDuration.OneDay    => TimeSpan.FromDays(1),
-        ThreadAutoArchiveDuration.ThreeDays => TimeSpan.FromDays(3),
-        ThreadAutoArchiveDuration.OneWeek   => TimeSpan.FromDays(7),
-        _                                   => throw new ArgumentOutOfRangeException(nameof(duration), duration, null),
-    };
+    public static TimeSpan ToTimeSpan(this ThreadAutoArchiveDuration duration) => TimeSpan.FromMinutes((int)duration);
 }
