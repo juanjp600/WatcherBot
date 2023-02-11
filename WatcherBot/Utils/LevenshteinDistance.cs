@@ -48,6 +48,7 @@ public static class LevenshteinDistance
 
     public static (int Index, int Length, int Distance)? FindSubstr(string str, string substr, int maxDistance)
     {
+        // ReSharper disable once PatternAlwaysMatches
         if (str.IndexOf(substr, StringComparison.Ordinal) is int val and > 0)
         {
             return (val, substr.Length, 0);
@@ -63,7 +64,7 @@ public static class LevenshteinDistance
         {
             ReadOnlySpan<char> subStrToTest = str.AsSpan(j, testLength);
             int                distance     = Calculate(subStrToTest, substr);
-            if (distance > maxDistance || foundDistance >= 0 && distance >= foundDistance)
+            if (distance > maxDistance || (foundDistance >= 0 && distance >= foundDistance))
             {
                 continue;
             }

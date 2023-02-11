@@ -1,5 +1,3 @@
-using System;
-
 namespace WatcherBot.Utils.ANSI;
 
 public enum Style
