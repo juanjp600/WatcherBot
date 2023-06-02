@@ -211,6 +211,12 @@ public class MessageDeleters : IDisposable
                 return;
             }
 
+            if (string.IsNullOrWhiteSpace(messageContentToTest))
+            {
+                logger.LogInformation("Message from {Sender} is blank!", args.Author.UsernameWithDiscriminator);
+                return;
+            }
+
             char[] whitespace = new[] { '\n', '\t', '\r', ' ' }.Concat(messageContentToTest.Where(char.IsWhiteSpace))
                                                                .Distinct()
                                                                .ToArray();

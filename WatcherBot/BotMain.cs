@@ -63,7 +63,7 @@ public class BotMain : IDisposable
         {
             Token         = config.DiscordApiToken,
             TokenType     = TokenType.Bot,
-            Intents       = DiscordIntents.AllUnprivileged,
+            Intents       = DiscordIntents.AllUnprivileged | DiscordIntents.MessageContent,
             AutoReconnect = true,
             LoggerFactory = new LoggerFactory().AddSerilog(Log.Logger),
         };
@@ -97,6 +97,11 @@ public class BotMain : IDisposable
         commands.CommandErrored  += Logging.Logging.CommandErrored;
         commands.RegisterConverter(new DateTimeConverter());
         commands.RegisterCommands(Assembly.GetAssembly(typeof(BotMain)));
+
+        commandHandler = typeof(CommandsNextExtension).GetMethod("HandleCommandsAsync",
+                BindingFlags.Instance | BindingFlags.NonPublic)
+            ?.CreateDelegate<CommandHandler>(commands)
+                ?? throw new Exception("Failed to create delegate for CommandsNextExtension.HandleCommandsAsync!");
     }
 
     public DiscordGuild OutputGuild => Client.Guilds[config.OutputGuildId];
@@ -141,14 +146,14 @@ public class BotMain : IDisposable
         await guildUser.GrantRoleAsync(MutedRole, reason);
     }
 
+
+    private delegate Task CommandHandler(DiscordClient sender, MessageCreateEventArgs args);
+    private readonly CommandHandler commandHandler;
     private Task HandleCommand(DiscordClient sender, MessageCreateEventArgs args)
     {
         if (!config.ProhibitCommandsFromUsers.Contains(args.Author.Id))
         {
-            return (typeof(CommandsNextExtension).GetMethod("HandleCommandsAsync",
-                                                            BindingFlags.Instance | BindingFlags.NonPublic)!
-                                                 .Invoke(sender.GetCommandsNext(), new object?[] { sender, args }) as
-                        Task) !;
+            return commandHandler(sender, args);
         }
 
         return Task.CompletedTask;
