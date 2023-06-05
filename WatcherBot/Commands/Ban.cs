@@ -28,19 +28,20 @@ public class BanCommandModule : BaseCommandModule
         string?        reason,
         Anonymous      anon = Anonymous.No)
     {
-        context.Client.Logger.LogInformation("Banning {Member} with reason {Reason}", member.UsernameWithDiscriminator,
+        context.Client.Logger.LogInformation("Banning {Member} with reason {Reason}",
+                                             member.QueryableName(),
                                              reason);
 
         string banMsg = Templates.Ban.Replace("[reason]", reason ?? "No reason provided")
                                  .Replace("[banner]",
-                                          Templates.GetAppealRecipients(context.User.UsernameWithDiscriminator, anon));
+                                          Templates.GetAppealRecipients(context.User.QueryableName(), anon));
 
         var appeal = "The appeal message could not be sent.";
         try
         {
             await member.SendMessageAsync(banMsg);
             appeal = $"The message sent was the following:\n{banMsg}";
-            context.Client.Logger.LogDebug("Sent banned user {Member} DM", member.UsernameWithDiscriminator);
+            context.Client.Logger.LogDebug("Sent banned user {Member} DM", member.QueryableName());
         }
         catch (Exception e)
         {

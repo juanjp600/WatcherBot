@@ -5,17 +5,27 @@ namespace WatcherBot.Utils;
 
 public class Templates
 {
-    private readonly Lazy<string> banLazy;
-    private readonly Lazy<string> timeoutLazy;
+    private string? banLazy;
+    private string? timeoutLazy;
 
-    public Templates()
+    public string Ban
     {
-        banLazy     = new Lazy<string>(() => string.Join('\n', ban));
-        timeoutLazy = new Lazy<string>(() => string.Join('\n', timeout));
+        get
+        {
+            if (ban.Count == 0) { return ""; }
+            return banLazy ??= string.Join("\n", ban);
+        }
     }
 
-    public string Ban => banLazy.Value;
-    public string Timeout => timeoutLazy.Value;
+    public string Timeout
+    {
+        get
+        {
+            if (timeout.Count == 0) { return ""; }
+            return timeoutLazy ??= string.Join("\n", timeout);
+        }
+    }
+
     public string DefaultAppealRecipient { get; init; } = "";
 
     public string GetAppealRecipients(string otherName, Anonymous anon) =>

@@ -1,0 +1,3 @@
+[submodule "Submodules/DisCatSharp"]
+	path = Submodules/DisCatSharp
+	url = git@github.com:juanjp600/DisCatSharp

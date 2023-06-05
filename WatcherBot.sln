@@ -7,6 +7,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WatcherBot", "WatcherBot\Wa
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "WatcherBot.FSharp", "WatcherBot.FSharp\WatcherBot.FSharp.fsproj", "{BB28F9CE-23C2-4417-B3CB-E7E59880197F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", "{6F164EA8-6582-4374-9044-34614C30FA42}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DisCatSharp", "DisCatSharp", "{09FB8FDA-9141-47BA-9976-BF12C0F564C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DisCatSharp", "Submodules\DisCatSharp\DisCatSharp\DisCatSharp.csproj", "{BF45B5D3-3E35-421E-9FE8-FD1AE2CE9570}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DisCatSharp.Common", "Submodules\DisCatSharp\DisCatSharp.Common\DisCatSharp.Common.csproj", "{859821A7-2849-457C-9F47-24EA8982A914}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DisCatSharp.CommandsNext", "Submodules\DisCatSharp\DisCatSharp.CommandsNext\DisCatSharp.CommandsNext.csproj", "{A3CE1184-946B-4193-8614-CA3C21595575}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,11 +31,29 @@ Global
 		{BB28F9CE-23C2-4417-B3CB-E7E59880197F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB28F9CE-23C2-4417-B3CB-E7E59880197F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB28F9CE-23C2-4417-B3CB-E7E59880197F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF45B5D3-3E35-421E-9FE8-FD1AE2CE9570}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF45B5D3-3E35-421E-9FE8-FD1AE2CE9570}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF45B5D3-3E35-421E-9FE8-FD1AE2CE9570}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF45B5D3-3E35-421E-9FE8-FD1AE2CE9570}.Release|Any CPU.Build.0 = Release|Any CPU
+		{859821A7-2849-457C-9F47-24EA8982A914}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{859821A7-2849-457C-9F47-24EA8982A914}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{859821A7-2849-457C-9F47-24EA8982A914}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{859821A7-2849-457C-9F47-24EA8982A914}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3CE1184-946B-4193-8614-CA3C21595575}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3CE1184-946B-4193-8614-CA3C21595575}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3CE1184-946B-4193-8614-CA3C21595575}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3CE1184-946B-4193-8614-CA3C21595575}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0285F1D1-FFE0-491F-AF83-0EB86A1A440A}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{09FB8FDA-9141-47BA-9976-BF12C0F564C9} = {6F164EA8-6582-4374-9044-34614C30FA42}
+		{BF45B5D3-3E35-421E-9FE8-FD1AE2CE9570} = {09FB8FDA-9141-47BA-9976-BF12C0F564C9}
+		{859821A7-2849-457C-9F47-24EA8982A914} = {09FB8FDA-9141-47BA-9976-BF12C0F564C9}
+		{A3CE1184-946B-4193-8614-CA3C21595575} = {09FB8FDA-9141-47BA-9976-BF12C0F564C9}
 	EndGlobalSection
 EndGlobal

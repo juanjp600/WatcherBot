@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using DisCatSharp;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.Entities;
+using DisCatSharp.Enums;
 using DisCatSharp.EventArgs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -96,7 +97,7 @@ public class BotMain : IDisposable
         commands.CommandExecuted += Logging.Logging.CommandExecuted;
         commands.CommandErrored  += Logging.Logging.CommandErrored;
         commands.RegisterConverter(new DateTimeConverter());
-        commands.RegisterCommands(Assembly.GetAssembly(typeof(BotMain)));
+        commands.RegisterCommands(Assembly.GetAssembly(typeof(BotMain))!);
 
         commandHandler = typeof(CommandsNextExtension).GetMethod("HandleCommandsAsync",
                 BindingFlags.Instance | BindingFlags.NonPublic)
