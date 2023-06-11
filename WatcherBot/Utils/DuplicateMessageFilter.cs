@@ -102,8 +102,21 @@ public class DuplicateMessageFilter : LoopingTask
         (_, current) =>
         {
             if (message.Channel.GuildId == Config.OutputGuildId
-                && !string.IsNullOrWhiteSpace(message.Content)
-                && message.Content.ContainsLink()) { current.Enqueue(message); }
+                && !string.IsNullOrWhiteSpace(message.Content))
+            {
+                bool hasUrl = message.Content.ContainsLink();
+
+                // Four-character messages can't really contain anything super malicious,
+                // so we don't track those
+                bool msgIsLongEnough = message.Content.Length > 4;
+                if (hasUrl || msgIsLongEnough)
+                {
+                    current.Enqueue(message);
+                }
+
+                // Don't let the queue grow too much
+                while (current.Count > 25) { current.TryDequeue(out var __); }
+            }
 
             return current;
         };
