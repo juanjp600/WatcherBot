@@ -44,12 +44,20 @@ public class Config
     private Dictionary<string, Range> attachmentLimits { get; } = new();
     public IReadOnlyDictionary<ulong, Range> AttachmentLimits => attachmentLimitsLazy.Value;
 
+    private HashSet<ulong> noReplies { get; } = new();
+    public IReadOnlySet<ulong> NoReplies => noReplies;
+
     public Templates Templates { get; init; } = new();
 
     private Spam Spam { get; } = new();
 
+    private BadWords BadWords { get; } = new();
+
     public IReadOnlySet<(string Substring, int MaxDistance, float Weight)> SpamSubstrings =>
         Spam.SpamSubstrings;
+
+    public IReadOnlySet<(string Substring, int MaxDistance)> BadSubstrings =>
+        BadWords.BadSubstrings;
 
     private HashSet<string> knownSafeSubstrings { get; } = new();
     public IReadOnlySet<string> KnownSafeSubstrings => knownSafeSubstrings;

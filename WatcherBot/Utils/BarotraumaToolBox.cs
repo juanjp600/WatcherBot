@@ -127,7 +127,16 @@ public static class BarotraumaToolBox
 
     public static IsCringe ToCringe(this bool @bool) => @bool ? IsCringe.Yes : IsCringe.No;
 
-    public static async Task ReportSpam(BotMain botMain, DiscordMessage spamMessage, string reason)
+    // Remove certain characters that can break formatting or generate tasteless embeds
+    public static string SanitizeReportMessageContent(this string msgContent)
+    {
+        var retVal = msgContent.Replace("`", "")
+            .Replace("\\", " <BACKSLASH> ")
+            .Replace("/", " <SLASH> ");
+        return retVal;
+    }
+
+    public static async Task ReportSpam(BotMain botMain, DiscordMessage spamMessage, string reason, bool badWords)
     {
         DiscordChannel    reportChannel = botMain.SpamReportChannel;
         DiscordMember     member        = await botMain.GetMemberFromUser(spamMessage.Author);
@@ -136,12 +145,22 @@ public static class BarotraumaToolBox
         Exception?        dmException   = null;
         try
         {
+            var msgToSend =
+                $"You have been automatically muted on the Undertow Games server for sending the following message in {spamMessage.Channel.Mention}:\n\n"
+                + $"```\n{spamMessage.Content.Replace("`", "")}\n```\n\n";
+            if (!badWords)
+            {
+                msgToSend +=
+                    "This is a spam prevention measure. If this was a false positive, please contact a moderator or administrator.";
+            }
+            else
+            {
+                msgToSend += "If you believe this was an error, please contact a moderator or administrator.";
+            }
             dm =
                 await
                     dmChannel
-                        .SendMessageAsync($"You have been automatically muted on the Undertow Games server for sending the following message in {spamMessage.Channel.Mention}:\n\n"
-                                          + $"```\n{spamMessage.Content.Replace("`", "")}\n```\n\n"
-                                          + "This is a spam prevention measure. If this was a false positive, please contact a moderator or administrator.");
+                        .SendMessageAsync(msgToSend);
         }
         catch (Exception e)
         {
@@ -153,7 +172,7 @@ public static class BarotraumaToolBox
             _ =
                 reportChannel
                     .SendMessageAsync($"{spamMessage.Author.Mention} has been muted for sending the following message in {spamMessage.Channel.Mention}:\n\n"
-                                      + $"```\n{spamMessage.Content.Replace("`", "")}\n```\n\n"
+                                      + $"```\n{spamMessage.Content.SanitizeReportMessageContent()}\n```\n\n"
                                       + $"{reason}\n\n"
                                       + "If this was a false positive, you may revert this by removing the `Muted` role and granting the `Spam filter exemption` role.\n\n"
                                       + (dm != null

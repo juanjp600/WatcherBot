@@ -26,12 +26,12 @@ public class Templates
         }
     }
 
-    public string DefaultAppealRecipient { get; init; } = "";
+    public string DefaultAppealRecipient { get; set; } = "";
 
     public string GetAppealRecipients(string otherName, Anonymous anon) =>
         anon == Anonymous.Yes || otherName == DefaultAppealRecipient
-            ? DefaultAppealRecipient
-            : $"{otherName} or {DefaultAppealRecipient}";
+            ? $"`{DefaultAppealRecipient}`"
+            : $"`{otherName}` or `{DefaultAppealRecipient}`";
 
     // ReSharper disable CollectionNeverUpdated.Local
     private List<string> ban { get; } = new();

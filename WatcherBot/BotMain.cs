@@ -76,7 +76,9 @@ public class BotMain : IDisposable
         Client.MessageCreated += deleters.DeleteCringeMessages;
         Client.MessageCreated += deleters.MessageWithinAttachmentLimits;
         Client.MessageCreated += deleters.ProhibitFormattingFromUsers;
+        Client.MessageCreated += deleters.DeleteBadWords;
         Client.MessageCreated += deleters.DeletePotentialSpam;
+        Client.MessageCreated += deleters.ReplyInNoConversationChannel;
 
         duplicateMessageFilter =  new DuplicateMessageFilter(this, configOptions);
         Client.MessageCreated  += duplicateMessageFilter.MessageCreated;

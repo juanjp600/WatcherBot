@@ -71,7 +71,7 @@ public class DuplicateMessageFilter : LoopingTask
                 string reason =
                     $"{numberDuplicates} copies of this message sent in the last {KeepDuration.TotalSeconds}s"
                     + $" in {string.Join(", ", channels.Select(c => c.Mention))}.";
-                await BarotraumaToolBox.ReportSpam(BotMain, duplicateMessages.First(), reason);
+                await BarotraumaToolBox.ReportSpam(BotMain, duplicateMessages.First(), reason, badWords: false);
 
                 await BotMain.MuteUser(user, "Auto-detected spam messages");
                 await Task.WhenAll(duplicateMessages.Select(m => m.DeleteAsync("Auto-detected spam message")));

@@ -21,6 +21,7 @@ public class MessageDeleters : IDisposable
         ProhibitedFormatting,
         CringeMessage,
         PotentialSpam,
+        BadWord,
         ReplyInNoConversationChannel,
     }
 
@@ -46,7 +47,10 @@ public class MessageDeleters : IDisposable
     {
         Delete DeletionCondition()
         {
-            if (config.InvitesAllowedOnChannels.Contains(args.Message.Channel.Id))
+            var thread = botMain.OutputGuild.GetThread(args.Channel.Id);
+
+            if (config.InvitesAllowedOnChannels.Contains(args.Message.Channel.Id)
+                || (thread is { Parent.Id: var parentId } && config.InvitesAllowedOnChannels.Contains(parentId)))
             {
                 return Delete.No;
             }
@@ -63,7 +67,6 @@ public class MessageDeleters : IDisposable
         {
             return Task.CompletedTask;
         }
-
 
         logger.LogInformation("Deleting message sent by {User} for reason {Reason}",
                               args.Message.Author.UsernameWithDiscriminator,
@@ -167,6 +170,58 @@ public class MessageDeleters : IDisposable
         return Task.CompletedTask;
     }
 
+    public Task DeleteBadWords(DiscordClient sender, MessageCreateEventArgs args)
+    {
+        Task _ = Task.Run(async () =>
+        {
+            if (!args.Channel.IsPrivate && botMain.OutputGuild != args.Guild)
+            {
+                return;
+            }
+
+            if (args.Author.IsBot)
+            {
+                return;
+            }
+
+            if (await botMain.IsUserModerator(args.Author) == IsModerator.Yes)
+            {
+                return;
+            }
+
+            if (await botMain.IsUserExemptFromSpamFilter(args.Author) == IsExemptFromSpamFilter.Yes)
+            {
+                return;
+            }
+
+            string messageContent       = args.Message.Content;
+            string messageContentToTest = messageContent.ToLowerInvariant();
+
+            var hits = config.BadSubstrings.Select(bw =>
+            {
+                var result = LevenshteinDistance.FindSubstr(messageContentToTest, bw.Substring, bw.MaxDistance);
+                var substr = result is { Index: var index, Length: var length }
+                    ? messageContent.Substring(index, length)
+                    : "";
+                return (Found: substr, Matched: bw.Substring);
+            }).Where(sp => !string.IsNullOrWhiteSpace(sp.Found)).ToArray();
+            if (hits.Length > 0)
+            {
+                logger.LogInformation("Deleting message sent by and muting {User} for reason {Reason}",
+                    args.Message.Author.UsernameWithDiscriminator,
+                    MessageDeletionReason.BadWord);
+                var reason = $"*Hits*: {string.Join(", ", hits.Select(h => $"{h.Found} (matched \"{h.Matched}\")"))}";
+
+                _ = BarotraumaToolBox.ReportSpam(botMain, args.Message, reason, badWords: true);
+
+                _ = botMain.MuteUser(args.Author, $"Bad words {DateTime.UtcNow}");
+                _ = args.Message.DeleteAsync();
+            }
+        });
+
+        return Task.CompletedTask;
+    }
+
     public Task DeletePotentialSpam(DiscordClient sender, MessageCreateEventArgs args)
     {
         Task _ = Task.Run(async () =>
@@ -218,27 +273,26 @@ public class MessageDeleters : IDisposable
             }
 
             char[] whitespace = new[] { '\n', '\t', '\r', ' ' }.Concat(messageContentToTest.Where(char.IsWhiteSpace))
-                                                               .Distinct()
-                                                               .ToArray();
+               .Distinct()
+               .ToArray();
             string[] messageContentSplit = messageContentToTest.Split(whitespace);
-            var      sw                  = Stopwatch.StartNew();
+            var sw = Stopwatch.StartNew();
             (string InText, string InFilter, float Weight)[] hits = messageContentSplit
-                                                                    .Where(s1 => !string.IsNullOrWhiteSpace(s1))
-                                                                    .Select(s1 => config.SpamSubstrings
-                                                                                    .FirstOrDefault(s2 =>
-                                                                                        LevenshteinDistance
-                                                                                            .Calculate(s1,
-                                                                                                s2
-                                                                                                    .Substring)
-                                                                                        <= s2
-                                                                                            .MaxDistance)
-                                                                                is var (substring, _, weight)
-                                                                                ? (s1, substring, weight)
-                                                                                : ("", "", 0.0f))
-                                                                    .Cast<(string InText, string InFilter, float Weight
-                                                                        )>()
-                                                                    .Where(t => t.Weight > 0.0f)
-                                                                    .ToArray();
+                .Where(s1 => !string.IsNullOrWhiteSpace(s1))
+                .Select(s1 => config.SpamSubstrings
+                                .FirstOrDefault(s2 =>
+                                    LevenshteinDistance
+                                        .Calculate(s1,
+                                            s2
+                                                .Substring)
+                                    <= s2
+                                        .MaxDistance)
+                            is var (substring, _, weight)
+                            ? (s1, substring, weight)
+                            : ("", "", 0.0f))
+                .Cast<(string InText, string InFilter, float Weight)>()
+                .Where(t => t.Weight > 0.0f)
+                .ToArray();
             /*config.SpamSubstrings
                 .Select(s => LevenshteinDistance.Calculate(messageContentToTest, s.Substring, s.MaxDistance))
                 .Where(r => r is not null)
@@ -253,7 +307,7 @@ public class MessageDeleters : IDisposable
                                       MessageDeletionReason.PotentialSpam);
                 var reason = $"*Hits*: {string.Join(", ", hits.Select(h => $"{h.InText} (matched \"{h.InFilter}\")"))}";
 
-                _ = BarotraumaToolBox.ReportSpam(botMain, args.Message, reason);
+                _ = BarotraumaToolBox.ReportSpam(botMain, args.Message, reason, badWords: false);
 
                 _ = botMain.MuteUser(args.Author, $"Potential spam {DateTime.UtcNow}");
                 _ = args.Message.DeleteAsync();
@@ -265,7 +319,7 @@ public class MessageDeleters : IDisposable
 
     public Task ReplyInNoConversationChannel(DiscordClient sender, MessageCreateEventArgs args)
     {
-        if (!config.AttachmentLimits.ContainsKey(args.Channel.Id) || args.Message.ReferencedMessage is null)
+        if (!config.NoReplies.Contains(args.Channel.Id) || args.Message.ReferencedMessage is null)
         {
             return Task.CompletedTask;
         }

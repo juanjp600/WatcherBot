@@ -19,7 +19,7 @@ public class TimeoutCommandModule : BaseCommandModule
     }
 
     private async Task Timeout(CommandContext          context, DiscordMember member, DateTime time,
-                               [RemainingText] string? reason,  Anonymous     anon)
+                               string? reason,  Anonymous     anon)
     {
         try
         {
@@ -36,7 +36,7 @@ public class TimeoutCommandModule : BaseCommandModule
 
         string msg = templates.Timeout.Replace("[time]", unixStr)
                               .Replace("[timeouter]",
-                                       templates.GetAppealRecipients(context.User.UsernameWithDiscriminator, anon))
+                                       templates.GetAppealRecipients(context.User.QueryableName(), anon))
                               .Replace("[reason]", reason ?? "No reason provided");
 
         var appeal = $"The appeal message sent was:\n{msg}";
