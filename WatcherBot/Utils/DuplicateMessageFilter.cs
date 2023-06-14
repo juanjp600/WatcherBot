@@ -105,11 +105,8 @@ public class DuplicateMessageFilter : LoopingTask
                 && !string.IsNullOrWhiteSpace(message.Content))
             {
                 bool hasUrl = message.Content.ContainsLink();
-
-                // Four-character messages can't really contain anything super malicious,
-                // so we don't track those
-                bool msgIsLongEnough = message.Content.Length > 4;
-                if (hasUrl || msgIsLongEnough)
+                bool hasSpamFilterHits = Config.GetSpamFilterHits(message.Content.ToLowerInvariant()).Length > 0;
+                if (hasUrl || hasSpamFilterHits)
                 {
                     current.Enqueue(message);
                 }

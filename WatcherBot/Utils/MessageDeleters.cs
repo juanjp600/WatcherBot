@@ -272,33 +272,7 @@ public class MessageDeleters : IDisposable
                 return;
             }
 
-            char[] whitespace = new[] { '\n', '\t', '\r', ' ' }.Concat(messageContentToTest.Where(char.IsWhiteSpace))
-               .Distinct()
-               .ToArray();
-            string[] messageContentSplit = messageContentToTest.Split(whitespace);
-            var sw = Stopwatch.StartNew();
-            (string InText, string InFilter, float Weight)[] hits = messageContentSplit
-                .Where(s1 => !string.IsNullOrWhiteSpace(s1))
-                .Select(s1 => config.SpamSubstrings
-                                .FirstOrDefault(s2 =>
-                                    LevenshteinDistance
-                                        .Calculate(s1,
-                                            s2
-                                                .Substring)
-                                    <= s2
-                                        .MaxDistance)
-                            is var (substring, _, weight)
-                            ? (s1, substring, weight)
-                            : ("", "", 0.0f))
-                .Cast<(string InText, string InFilter, float Weight)>()
-                .Where(t => t.Weight > 0.0f)
-                .ToArray();
-            /*config.SpamSubstrings
-                .Select(s => LevenshteinDistance.Calculate(messageContentToTest, s.Substring, s.MaxDistance))
-                .Where(r => r is not null)
-                .Cast<(int Index, int Length, int Distance)>()
-                .ToArray();*/
-            sw.Stop();
+            var hits = config.GetSpamFilterHits(messageContentToTest);
 
             if (hits.Sum(h => h.Weight) >= 2)
             {

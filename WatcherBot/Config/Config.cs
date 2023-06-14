@@ -56,6 +56,30 @@ public class Config
     public IReadOnlySet<(string Substring, int MaxDistance, float Weight)> SpamSubstrings =>
         Spam.SpamSubstrings;
 
+    public (string InText, string InFilter, float Weight)[] GetSpamFilterHits(string messageContentToTest)
+    {
+        char[] whitespace = new[] { '\n', '\t', '\r', ' ' }.Concat(messageContentToTest.Where(char.IsWhiteSpace))
+            .Distinct()
+            .ToArray();
+        string[] messageContentSplit = messageContentToTest.Split(whitespace);
+        (string InText, string InFilter, float Weight)[] hits = messageContentSplit
+            .Where(s1 => !string.IsNullOrWhiteSpace(s1))
+            .Select(s1 => SpamSubstrings
+                    .FirstOrDefault(s2 =>
+                        LevenshteinDistance
+                            .Calculate(s1,
+                                s2
+                                    .Substring)
+                        <= s2
+                            .MaxDistance)
+                is var (substring, _, weight)
+                ? (InText: s1, InFilter: substring, Weight: weight)
+                : (InText: "", InFilter: "", Weight: 0.0f))
+            .Where(t => t.Weight > 0.0f)
+            .ToArray();
+        return hits;
+    }
+
     public IReadOnlySet<(string Substring, int MaxDistance)> BadSubstrings =>
         BadWords.BadSubstrings;
 
