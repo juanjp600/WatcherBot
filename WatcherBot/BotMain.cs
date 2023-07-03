@@ -27,7 +27,7 @@ public class BotMain : IDisposable
 
     private readonly DuplicateMessageFilter duplicateMessageFilter;
 
-    public readonly GitHubClient GitHubClient;
+    public readonly GitHubClient? GitHubClient;
 
     private readonly ServiceProvider services;
     private readonly CancellationTokenSource shutdownRequest;
@@ -56,10 +56,12 @@ public class BotMain : IDisposable
         shutdownRequest = new CancellationTokenSource();
 
         //GitHub API
-        GitHubClient = new GitHubClient(new ProductHeaderValue("WatcherBot"));
-        var gitHubCredentials = new Credentials(config.GitHubToken);
-        GitHubClient.Credentials = gitHubCredentials;
-        GitHubClient.SetRequestTimeout(TimeSpan.FromSeconds(5));
+        if (!string.IsNullOrEmpty(config.GitHubToken)) {
+            GitHubClient = new GitHubClient(new ProductHeaderValue("WatcherBot"));
+            var gitHubCredentials = new Credentials(config.GitHubToken);
+            GitHubClient.Credentials = gitHubCredentials;
+            GitHubClient.SetRequestTimeout(TimeSpan.FromSeconds(5));
+        }
 
         //Discord API
         var discordConfiguration = new DiscordConfiguration
