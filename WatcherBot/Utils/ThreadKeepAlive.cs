@@ -15,11 +15,11 @@ public class ThreadKeepAlive : LoopingTask
     private readonly string keepAliveMessage;
     private readonly IReadOnlySet<ulong> keepAliveThreadIds;
 
-    public ThreadKeepAlive(BotMain botMain, IOptions<Config.Config> config) : base(botMain, config)
+    public ThreadKeepAlive(BotMain botMain, Config.Config config) : base(botMain, config)
     {
         client             = botMain.Client;
-        keepAliveThreadIds = config.Value.KeepAliveThreadIds;
-        keepAliveMessage   = config.Value.KeepAliveMessage;
+        keepAliveThreadIds = config.KeepAliveThreadIds;
+        keepAliveMessage   = config.KeepAliveMessage;
     }
 
     protected override TimeSpan LoopFrequency => TimeSpan.FromSeconds(30);

@@ -32,6 +32,8 @@ public class BotMain : IDisposable
     private readonly ServiceProvider services;
     private readonly CancellationTokenSource shutdownRequest;
     private readonly ThreadKeepAlive threadKeepAlive;
+    
+    private readonly MinecraftStatusChecker minecraftStatusChecker;
 
     public BotMain()
     {
@@ -80,12 +82,15 @@ public class BotMain : IDisposable
         Client.MessageCreated += deleters.DeletePotentialSpam;
         Client.MessageCreated += deleters.ReplyInNoConversationChannel;
 
-        duplicateMessageFilter =  new DuplicateMessageFilter(this, configOptions);
+        duplicateMessageFilter =  new DuplicateMessageFilter(this, config);
         Client.MessageCreated  += duplicateMessageFilter.MessageCreated;
         duplicateMessageFilter.Start();
 
-        threadKeepAlive = new ThreadKeepAlive(this, configOptions);
+        threadKeepAlive = new ThreadKeepAlive(this, config);
         threadKeepAlive.Start();
+
+        minecraftStatusChecker = new MinecraftStatusChecker(this, config);
+        minecraftStatusChecker.Start();
 
         CommandsNextConfiguration commandsConfig = new()
         {
