@@ -27,11 +27,13 @@ public class BotMain : IDisposable
 
     private readonly DuplicateMessageFilter duplicateMessageFilter;
 
-    public readonly GitHubClient GitHubClient;
+    public readonly GitHubClient? GitHubClient;
 
     private readonly ServiceProvider services;
     private readonly CancellationTokenSource shutdownRequest;
     private readonly ThreadKeepAlive threadKeepAlive;
+    
+    private readonly MinecraftStatusChecker minecraftStatusChecker;
 
     public BotMain()
     {
@@ -54,10 +56,12 @@ public class BotMain : IDisposable
         shutdownRequest = new CancellationTokenSource();
 
         //GitHub API
-        GitHubClient = new GitHubClient(new ProductHeaderValue("WatcherBot"));
-        var gitHubCredentials = new Credentials(config.GitHubToken);
-        GitHubClient.Credentials = gitHubCredentials;
-        GitHubClient.SetRequestTimeout(TimeSpan.FromSeconds(5));
+        if (!string.IsNullOrEmpty(config.GitHubToken)) {
+            GitHubClient = new GitHubClient(new ProductHeaderValue("WatcherBot"));
+            var gitHubCredentials = new Credentials(config.GitHubToken);
+            GitHubClient.Credentials = gitHubCredentials;
+            GitHubClient.SetRequestTimeout(TimeSpan.FromSeconds(5));
+        }
 
         //Discord API
         var discordConfiguration = new DiscordConfiguration
@@ -80,12 +84,15 @@ public class BotMain : IDisposable
         Client.MessageCreated += deleters.DeletePotentialSpam;
         Client.MessageCreated += deleters.ReplyInNoConversationChannel;
 
-        duplicateMessageFilter =  new DuplicateMessageFilter(this, configOptions);
+        duplicateMessageFilter =  new DuplicateMessageFilter(this, config);
         Client.MessageCreated  += duplicateMessageFilter.MessageCreated;
         duplicateMessageFilter.Start();
 
-        threadKeepAlive = new ThreadKeepAlive(this, configOptions);
+        threadKeepAlive = new ThreadKeepAlive(this, config);
         threadKeepAlive.Start();
+
+        minecraftStatusChecker = new MinecraftStatusChecker(this, config);
+        minecraftStatusChecker.Start();
 
         CommandsNextConfiguration commandsConfig = new()
         {

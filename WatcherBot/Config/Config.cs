@@ -102,4 +102,9 @@ public class Config
     public string KeepAliveMessage { get; init; } = "";
 
     public string YeensayMaskPath { get; init; } = "";
+
+    public TimeSpan MinecraftCheckInterval { get; init; } = TimeSpan.FromMinutes(1);
+
+    private List<MinecraftServer> minecraftServers { get; } = new();
+    public IReadOnlyList<MinecraftServer> MinecraftServers => minecraftServers;
 }

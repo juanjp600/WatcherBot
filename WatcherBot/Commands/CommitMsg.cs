@@ -67,6 +67,8 @@ public class CommitCommandModule : BaseCommandModule
     [Description("Find a particular issue or pull request")]
     public async Task Issue(CommandContext context, int number)
     {
+        if (botMain.GitHubClient is null) return;
+
         Issue issue = await botMain.GitHubClient.Issue.Get("Regalis11", "Barotrauma", number);
         await context.RespondAsync(issue.HtmlUrl);
     }
@@ -74,6 +76,8 @@ public class CommitCommandModule : BaseCommandModule
     [Command("openissues")]
     public async Task OpenIssues(CommandContext context)
     {
+        if (botMain.GitHubClient is null) return;
+
         // Get open Unstable issues
         var request = new RepositoryIssueRequest {
             Labels = {"Unstable"},

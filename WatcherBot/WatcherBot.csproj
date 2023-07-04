@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net7.0</TargetFramework>
         <RuntimeIdentifiers>win-x64;win-x64;linux-x64;linux-arm</RuntimeIdentifiers>
         <Nullable>enable</Nullable>
     </PropertyGroup>
@@ -36,6 +36,7 @@
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
         <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
         <PackageReference Include="System.Configuration.Abstractions" Version="2.0.2.45" />
+        <PackageReference Include="MCStatus.NET" Version="1.0.0" />
     </ItemGroup>
 
     <ItemGroup>
