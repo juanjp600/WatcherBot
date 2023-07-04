@@ -32,17 +32,19 @@ public class MinecraftStatusChecker : LoopingTask
                     str = string.Format(server.OnlineFormat, status.Description,
                         status.Players.Online, status.Players.Max, status.Version.Name);
                 }
-                catch (Exception)
+                catch
                 {
                     str = server.Offline;
                 }
 
                 var channel = await BotMain.Client.TryGetChannelAsync(server.ChannelId);
                 if (channel is not null && channel.Name != str)
+                {
                     await channel.ModifyAsync(x => x.Name = str);
+                }
             }));
         }
-        catch (Exception)
+        catch
         {
             // ignored
         }

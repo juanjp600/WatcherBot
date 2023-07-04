@@ -1,3 +1,6 @@
 [submodule "Submodules/DisCatSharp"]
 	path = Submodules/DisCatSharp
 	url = https://github.com/juanjp600/DisCatSharp
+[submodule "Submodules/MCStatus.NET"]
+	path = Submodules/MCStatus.NET
+	url = https://github.com/juanjp600/MCStatus.NET
