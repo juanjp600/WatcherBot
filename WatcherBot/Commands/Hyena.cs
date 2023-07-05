@@ -1,13 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using DisCatSharp.CommandsNext;
 using DisCatSharp.CommandsNext.Attributes;
 using DisCatSharp.Entities;
-using MCStatus;
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
@@ -31,40 +29,17 @@ public class HyenaCommandModule : BaseCommandModule
 
     private readonly BotMain botMain;
     private readonly string maskPath;
-    private readonly MinecraftServer? mcServer;
 
     public HyenaCommandModule(BotMain bm, IOptions<Config.Config> cfg)
     {
         botMain  = bm;
         maskPath = cfg.Value.YeensayMaskPath;
-        mcServer = cfg.Value.MinecraftServers.FirstOrDefault();
     }
 
     [Command("trash")]
     [Description("garbaggio")]
     public Task Trash(CommandContext context) =>
         throw new Exception("test exception");
-
-    [Command("testmc")]
-    [Description("testmc")]
-    public async Task TestMc(CommandContext context)
-    {
-        if (mcServer is not { } server) { return; }
-
-        context.Channel.SendMessageAsync("ack testmc");
-        try
-        {
-            var status =
-                await ServerListClient.GetStatusAsync(server.Host, server.Port.GetValueOrDefault(25565));
-            var str = string.Format(server.OnlineFormat, status.Description,
-                status.Players.Online, status.Players.Max, status.Version.Name);
-            context.Channel.SendMessageAsync(str);
-        }
-        catch (Exception e)
-        {
-            context.Channel.SendMessageAsync("EXCEPTION: " + e.Message);
-        }
-    }
 
     [Command("sus")]
     [Description("smh my head")]
