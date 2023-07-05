@@ -59,13 +59,6 @@ public class HyenaCommandModule : BaseCommandModule
             var str = string.Format(server.OnlineFormat, status.Description,
                 status.Players.Online, status.Players.Max, status.Version.Name);
             context.Channel.SendMessageAsync(str);
-
-            var channel = await botMain.Client.TryGetChannelAsync(server.ChannelId);
-            if (channel is not null && channel.Name != str)
-            {
-                await channel.ModifyAsync(x => x.Name = str);
-            }
-            context.Channel.SendMessageAsync("success?");
         }
         catch (Exception e)
         {
