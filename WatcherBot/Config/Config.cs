@@ -100,6 +100,4 @@ public class Config
     public IReadOnlySet<ulong> KeepAliveThreadIds => keepAliveThreadIds;
 
     public string KeepAliveMessage { get; init; } = "";
-
-    public string YeensayMaskPath { get; init; } = "";
 }
